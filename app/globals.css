@@ -1,0 +1,132 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+@layer base {
+:root {
+  --background: 0 0% 100%;
+  --foreground: 240 3.7037% 15.8824%;
+  --card: 0 0% 100%;
+  --card-foreground: 240 3.7037% 15.8824%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 240 3.7037% 15.8824%;
+  --primary: 0 72.2222% 50.5882%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 210.0000 40.0000% 96.0784%;
+  --secondary-foreground: 215.2941 19.3182% 34.5098%;
+  --muted: 210.0000 40.0000% 96.0784%;
+  --muted-foreground: 220 8.9362% 46.0784%;
+  --accent: 210.0000 40.0000% 96.0784%;
+  --accent-foreground: 240 3.7037% 15.8824%;
+  --destructive: 0 72.2222% 50.5882%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 240 5.8824% 90%;
+  --input: 240 5.8824% 90%;
+  --ring: 0 72.2222% 50.5882%;
+  --chart-1: 0 84.2365% 60.1961%;
+  --chart-2: 0 90.6040% 70.7843%;
+  --chart-3: 0 96.2963% 89.4118%;
+  --chart-4: 0 93.5484% 81.7647%;
+  --chart-5: 0 93.3333% 94.1176%;
+  --sidebar: 0 0% 100%;
+  --sidebar-foreground: 240 3.7037% 15.8824%;
+  --sidebar-primary: 0 72.2222% 50.5882%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 210.0000 40.0000% 96.0784%;
+  --sidebar-accent-foreground: 240 3.7037% 15.8824%;
+  --sidebar-border: 240 5.8824% 90%;
+  --sidebar-ring: 0 72.2222% 50.5882%;
+  --font-sans: Roboto;
+  --font-serif: Georgia;
+  --font-mono: Menlo;
+  --radius: 0.5rem;
+  --shadow-x: 0rem;
+  --shadow-y: 0.125rem;
+  --shadow-blur: 0.25rem;
+  --shadow-spread: 0rem;
+  --shadow-opacity: 0.05;
+  --shadow-color: #000000;
+  --shadow-2xs: 0rem 0.125rem 0.25rem 0rem hsl(0 0% 0% / 0.03);
+  --shadow-xs: 0rem 0.125rem 0.25rem 0rem hsl(0 0% 0% / 0.03);
+  --shadow-sm: 0rem 0.125rem 0.25rem 0rem hsl(0 0% 0% / 0.05), 0rem 1px 2px -1px hsl(0 0% 0% / 0.05);
+  --shadow: 0rem 0.125rem 0.25rem 0rem hsl(0 0% 0% / 0.05), 0rem 1px 2px -1px hsl(0 0% 0% / 0.05);
+  --shadow-md: 0rem 0.125rem 0.25rem 0rem hsl(0 0% 0% / 0.05), 0rem 2px 4px -1px hsl(0 0% 0% / 0.05);
+  --shadow-lg: 0rem 0.125rem 0.25rem 0rem hsl(0 0% 0% / 0.05), 0rem 4px 6px -1px hsl(0 0% 0% / 0.05);
+  --shadow-xl: 0rem 0.125rem 0.25rem 0rem hsl(0 0% 0% / 0.05), 0rem 8px 10px -1px hsl(0 0% 0% / 0.05);
+  --shadow-2xl: 0rem 0.125rem 0.25rem 0rem hsl(0 0% 0% / 0.13);
+  --tracking-normal: 0em;
+  --spacing: 0.25rem;
+  --proposal-card: 0 0% 5.49%;
+  --proposal-card-2: 0 0% 14.51%;
+}
+
+.dark {
+  --background: 240 10.0000% 3.9216%;
+  --foreground: 0 0% 98.0392%;
+  --card: 240 10.0000% 3.9216%;
+  --card-foreground: 0 0% 98.0392%;
+  --popover: 240 10.0000% 3.9216%;
+  --popover-foreground: 0 0% 98.0392%;
+  --primary: 0 72.2222% 50.5882%;
+  --primary-foreground: 0 0% 98.0392%;
+  --secondary: 240 3.7037% 15.8824%;
+  --secondary-foreground: 240 5.0279% 64.9020%;
+  --muted: 240 3.7037% 15.8824%;
+  --muted-foreground: 240 5.0279% 64.9020%;
+  --accent: 240 3.7037% 15.8824%;
+  --accent-foreground: 0 0% 98.0392%;
+  --destructive: 0 72.2222% 50.5882%;
+  --destructive-foreground: 0 0% 98.0392%;
+  --border: 240 3.7037% 15.8824%;
+  --input: 240 3.7037% 15.8824%;
+  --ring: 0 72.2222% 50.5882%;
+  --chart-1: 0 72.2222% 50.5882%;
+  --chart-2: 0 84.2365% 60.1961%;
+  --chart-3: 0 93.5484% 81.7647%;
+  --chart-4: 0 96.2963% 89.4118%;
+  --chart-5: 0 93.3333% 94.1176%;
+  --sidebar: 240 10.0000% 3.9216%;
+  --sidebar-foreground: 0 0% 98.0392%;
+  --sidebar-primary: 0 72.2222% 50.5882%;
+  --sidebar-primary-foreground: 0 0% 98.0392%;
+  --sidebar-accent: 240 3.7037% 15.8824%;
+  --sidebar-accent-foreground: 0 0% 98.0392%;
+  --sidebar-border: 240 3.7037% 15.8824%;
+  --sidebar-ring: 0 72.2222% 50.5882%;
+  --font-sans: Roboto;
+  --font-serif: Georgia;
+  --font-mono: Menlo;
+  --radius: 0.5rem;
+  --shadow-x: 0rem;
+  --shadow-y: 0.125rem;
+  --shadow-blur: 0.25rem;
+  --shadow-spread: 0rem;
+  --shadow-opacity: 0.5;
+  --shadow-color: #000000;
+  --shadow-2xs: 0rem 0.125rem 0.25rem 0rem hsl(0 0% 0% / 0.25);
+  --shadow-xs: 0rem 0.125rem 0.25rem 0rem hsl(0 0% 0% / 0.25);
+  --shadow-sm: 0rem 0.125rem 0.25rem 0rem hsl(0 0% 0% / 0.50), 0rem 1px 2px -1px hsl(0 0% 0% / 0.50);
+  --shadow: 0rem 0.125rem 0.25rem 0rem hsl(0 0% 0% / 0.50), 0rem 1px 2px -1px hsl(0 0% 0% / 0.50);
+  --shadow-md: 0rem 0.125rem 0.25rem 0rem hsl(0 0% 0% / 0.50), 0rem 2px 4px -1px hsl(0 0% 0% / 0.50);
+  --shadow-lg: 0rem 0.125rem 0.25rem 0rem hsl(0 0% 0% / 0.50), 0rem 4px 6px -1px hsl(0 0% 0% / 0.50);
+  --shadow-xl: 0rem 0.125rem 0.25rem 0rem hsl(0 0% 0% / 0.50), 0rem 8px 10px -1px hsl(0 0% 0% / 0.50);
+  --shadow-2xl: 0rem 0.125rem 0.25rem 0rem hsl(0 0% 0% / 1.25);
+  --proposal-card: 0 0% 5.49%;
+  --proposal-card-2: 0 0% 14.51%;
+}
+}
+
+@layer base {
+	* {
+		@apply border-border;
+	}
+
+	body {
+		@apply bg-background text-foreground;
+	}
+}
+
+nextjs-portal {
+	display: none;
+}
