@@ -360,15 +360,18 @@ export default function ProposalEditorPage({
             }));
 
             // Single API call to add all activations
-            const response: any =
-              await bulkAddActivationsMutation.mutateAsync(bulkData);
+            const response: any = await bulkAddActivationsMutation.mutateAsync(
+              bulkData
+            );
 
             // Wait for the refetch to complete to ensure stats update
             await queryClient.refetchQueries({ queryKey: ["proposal", id] });
 
             // Show success toast with count
             toast.success(
-              `${response.data?.added || activationsToAdd.length} activation${(response.data?.added || activationsToAdd.length) > 1 ? "s" : ""} added automatically`
+              `${response.data?.added || activationsToAdd.length} activation${
+                (response.data?.added || activationsToAdd.length) > 1 ? "s" : ""
+              } added automatically`
             );
           }
         } catch (error) {
@@ -551,40 +554,10 @@ export default function ProposalEditorPage({
     },
   });
 
-  // Document generation mutations
-  const generatePdfMutation = useMutation({
-    mutationFn: (level: "simple" | "standard" | "detailed") =>
-      api.post(`/api/documents/pdf/${id}?level=${level}`, {}),
-    onSuccess: async (response: any) => {
-      const url = response.data?.url;
-      if (url) {
-        try {
-          // Fetch the file as a blob
-          const fileResponse = await fetch(url);
-          const blob = await fileResponse.blob();
-
-          // Create a blob URL and trigger download
-          const blobUrl = window.URL.createObjectURL(blob);
-          const link = document.createElement("a");
-          link.href = blobUrl;
-          link.download = `proposal-${proposal?.name || id}.pdf`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-
-          // Clean up the blob URL
-          window.URL.revokeObjectURL(blobUrl);
-          toast.success("PDF downloaded successfully");
-        } catch (error) {
-          console.error("Download error:", error);
-          toast.error("Failed to download PDF");
-        }
-      }
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || "Failed to generate PDF");
-    },
-  });
+  // PDF generation - Client-side with window.print()
+  const handleGeneratePdf = (level: "simple" | "standard" | "detailed") => {
+    window.open(`/proposals/${id}/pdf/${level}`, "_blank");
+  };
 
   const generatePptMutation = useMutation({
     mutationFn: () => api.post(`/api/documents/ppt/${id}`, {}),
@@ -908,7 +881,10 @@ export default function ProposalEditorPage({
     if (!result || !result[1] || !result[2] || !result[3]) {
       return `rgba(243, 244, 246, ${opacity})`; // fallback to gray
     }
-    return `rgba(${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}, ${opacity})`;
+    return `rgba(${parseInt(result[1], 16)}, ${parseInt(
+      result[2],
+      16
+    )}, ${parseInt(result[3], 16)}, ${opacity})`;
   };
 
   if (isLoading) {
@@ -981,13 +957,8 @@ export default function ProposalEditorPage({
     0
   );
 
-  // Calculate total value
-  const calculatedTotalValue =
-    calculatedActivationValue +
-    parseFloat(proposal?.tradeDealValue || "0") +
-    parseFloat(proposal?.focValue || "0") +
-    parseFloat(proposal?.creditNoteValue || "0") +
-    parseFloat(proposal?.boosterValue || "0");
+  // Use backend-calculated total value for accuracy
+  const calculatedTotalValue = parseFloat(proposal?.totalValue || "0");
 
   return (
     <div className="flex flex-1 flex-col gap-4 py-8 relative">
@@ -1449,15 +1420,8 @@ export default function ProposalEditorPage({
                   <div className="relative inline-flex">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="outline"
-                          disabled={generatePdfMutation.isPending}
-                        >
-                          {generatePdfMutation.isPending ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <FileText className="h-4 w-4" />
-                          )}
+                        <Button variant="outline">
+                          <FileText className="h-4 w-4" />
                           PDF
                           <Info className="h-1 w-1" />
                           <ChevronDown className="h-4 w-4 ml-2" />
@@ -1465,17 +1429,17 @@ export default function ProposalEditorPage({
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem
-                          onClick={() => generatePdfMutation.mutate("simple")}
+                          onClick={() => handleGeneratePdf("simple")}
                         >
                           Simple
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          onClick={() => generatePdfMutation.mutate("standard")}
+                          onClick={() => handleGeneratePdf("standard")}
                         >
                           Standard
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          onClick={() => generatePdfMutation.mutate("detailed")}
+                          onClick={() => handleGeneratePdf("detailed")}
                         >
                           Detailed
                         </DropdownMenuItem>
@@ -2243,8 +2207,8 @@ export default function ProposalEditorPage({
               {commercialToDelete?.type === "trade-deal"
                 ? "trade deal"
                 : commercialToDelete?.type === "foc"
-                  ? "FOC"
-                  : "credit note"}
+                ? "FOC"
+                : "credit note"}
               ? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
