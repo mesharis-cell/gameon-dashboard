@@ -1,19 +1,10 @@
 "use client";
 
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   CircleCheckBig,
   CircleAlert,
@@ -72,6 +63,14 @@ export function ActivationSelectionSheet({
   const isFixed = activation.activationType === "fixed";
   const isInProposal = !!existingSelection;
 
+  // Check if the clicked month is selected in the proposal
+  const isSelectedForThisMonth = clickedMonth
+    ? existingSelection?.selectedMonths.includes(clickedMonth) || false
+    : isInProposal;
+
+  // Get month name for display
+  const clickedMonthName = clickedMonth ? MONTH_NAMES[clickedMonth - 1] : null;
+
   // Auto-select months based on activation type
   const getAutoSelectedMonths = () => {
     if (activation.activationType === "fixed") {
@@ -84,9 +83,7 @@ export function ActivationSelectionSheet({
         return [monthToSelect];
       }
       // If clicked/current month not available, select first available month
-      return activation.availableMonths.length > 0
-        ? [activation.availableMonths[0]!]
-        : [];
+      return activation.availableMonths.length > 0 ? [activation.availableMonths[0]!] : [];
     }
   };
 
@@ -124,7 +121,10 @@ export function ActivationSelectionSheet({
     if (!result || !result[1] || !result[2] || !result[3]) {
       return `rgba(243, 244, 246, ${opacity})`; // fallback to gray
     }
-    return `rgba(${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}, ${opacity})`;
+    return `rgba(${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(
+      result[3],
+      16
+    )}, ${opacity})`;
   };
 
   return (
@@ -138,17 +138,10 @@ export function ActivationSelectionSheet({
           {/* Image */}
           <div className="relative w-full h-48 rounded-2xl overflow-hidden border">
             {activation.media ? (
-              <Image
-                src={activation.media}
-                alt={activation.name}
-                fill
-                className="object-cover"
-              />
+              <Image src={activation.media} alt={activation.name} fill className="object-cover" />
             ) : (
               <div className="flex items-center justify-center h-full bg-gradient-to-br from-primary/20 to-primary/5">
-                <span className="text-4xl font-bold text-primary">
-                  {brandName.charAt(0)}
-                </span>
+                <span className="text-4xl font-bold text-primary">{brandName.charAt(0)}</span>
               </div>
             )}
           </div>
@@ -189,8 +182,7 @@ export function ActivationSelectionSheet({
               >
                 {activation.activationType === "variable" ? (
                   <p className="flex items-center gap-x-1 py-0">
-                    <TrendingUpDown className="size-3" />{" "}
-                    <p className="text-xs">Variable</p>
+                    <TrendingUpDown className="size-3" /> <p className="text-xs">Variable</p>
                   </p>
                 ) : (
                   <p className="flex items-center gap-x-1 text-xs">
@@ -247,9 +239,7 @@ export function ActivationSelectionSheet({
                 <span className="font-medium text-xs">
                   {activation.availableMonths.length} months
                 </span>
-                <span className="text-muted-foreground text-xs">
-                  ({getMonthRange()})
-                </span>
+                <span className="text-muted-foreground text-xs">({getMonthRange()})</span>
               </div>
             </div>
           </div>
@@ -373,25 +363,15 @@ export function ActivationSelectionSheet({
                   <div className="text-3xl font-bold">
                     {(() => {
                       if (activation.activationType === "fixed") {
-                        return parseFloat(
-                          activation.totalValue
-                        ).toLocaleString();
-                      } else if (
-                        activation.scalingBehavior === "proportional"
-                      ) {
-                        const monthly = parseFloat(
-                          activation.variableAmount || "0"
-                        );
-                        const total =
-                          monthly * activation.availableMonths.length;
+                        return parseFloat(activation.totalValue).toLocaleString();
+                      } else if (activation.scalingBehavior === "proportional") {
+                        const monthly = parseFloat(activation.variableAmount || "0");
+                        const total = monthly * activation.availableMonths.length;
                         return total.toLocaleString();
                       } else if (activation.scalingBehavior === "mixed") {
                         const fixed = parseFloat(activation.fixedAmount || "0");
-                        const variable = parseFloat(
-                          activation.variableAmount || "0"
-                        );
-                        const total =
-                          fixed + variable * activation.availableMonths.length;
+                        const variable = parseFloat(activation.variableAmount || "0");
+                        const total = fixed + variable * activation.availableMonths.length;
                         return total.toLocaleString();
                       }
                       return parseFloat(activation.totalValue).toLocaleString();
@@ -402,27 +382,37 @@ export function ActivationSelectionSheet({
             </div>
           </Card>
 
-          {/* Action Buttons */}
+          {/* Action Buttons - Show based on current state */}
           <div className="flex gap-2">
-            <>
+            {!isSelectedForThisMonth ? (
               <Button
                 variant="default"
                 onClick={handleAdd}
                 disabled={!isEditable}
+                className="flex-1"
               >
                 <Plus className="h-4 w-4" />
-                Add This Activation
+                {isFixed
+                  ? "Add All Months"
+                  : clickedMonthName
+                  ? `Add to ${clickedMonthName}`
+                  : "Add This Activation"}
               </Button>
-
+            ) : (
               <Button
                 variant="outlinered"
                 onClick={handleRemove}
                 disabled={!isEditable}
+                className="flex-1"
               >
                 <XCircle className="h-4 w-4" />
-                Remove Activation
+                {isFixed
+                  ? "Remove Activation"
+                  : clickedMonthName
+                  ? `Remove from ${clickedMonthName}`
+                  : "Remove Activation"}
               </Button>
-            </>
+            )}
           </div>
         </div>
       </SheetContent>
