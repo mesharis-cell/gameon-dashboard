@@ -81,24 +81,13 @@ export default function ReviewPage({ params }: ReviewPageProps) {
     }
   }, [proposal]);
 
-  // Fetch PDF preview from server
-  const { data: pdfResponse, isLoading: isPdfLoading } = useQuery({
-    queryKey: ["proposal-pdf-preview", id],
-    queryFn: async () => {
-      const response = await api.post(
-        `/api/documents/pdf/${id}?level=detailed`,
-        {}
-      );
-      return response;
-    },
-    enabled: !!proposal, // Only fetch PDF after proposal is loaded
-  });
-
-  const pdfUrl = (pdfResponse as any)?.data?.url;
+  // Use client-side PDF template for preview (detailed template)
+  const pdfUrl = proposal ? `/proposals/${id}/pdf/detailed` : null;
+  const isPdfLoading = isLoading;
 
   // Calculate unique months across all activations
   const uniqueMonths = new Set(
-    proposal?.activations?.flatMap((pa) => pa.selectedMonths) || []
+    proposal?.activations?.flatMap((pa) => pa.selectedMonths) || [],
   );
   const activeMonthsCount = uniqueMonths.size;
 
@@ -107,7 +96,7 @@ export default function ReviewPage({ params }: ReviewPageProps) {
     (sum, pa) => {
       return sum + parseFloat(pa.calculatedValue || "0");
     },
-    0
+    0,
   );
 
   // Use backend-calculated total value for accuracy
@@ -199,7 +188,7 @@ export default function ReviewPage({ params }: ReviewPageProps) {
       : { minimumFractionDigits: 0, maximumFractionDigits: 0 };
 
     return new Intl.NumberFormat("en-AE", options).format(
-      typeof value === "string" ? parseFloat(value || "0") : value
+      typeof value === "string" ? parseFloat(value || "0") : value,
     );
   };
 
@@ -423,7 +412,7 @@ export default function ReviewPage({ params }: ReviewPageProps) {
                   <p className="text-2xl font-bold">
                     {formatCurrency(
                       calculatedActivationValue.toString(),
-                      false
+                      false,
                     )}
                   </p>
                   <p className="text-xs font-bold">AED</p>

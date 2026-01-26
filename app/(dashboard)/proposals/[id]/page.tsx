@@ -60,6 +60,9 @@ import {
   Trash,
   Info,
   Presentation,
+  Lock,
+  Shuffle,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAutoSave } from "@/lib/hooks/use-auto-save";
@@ -245,7 +248,7 @@ export default function ProposalEditorPage({
             </div>
           </div>
         ),
-        { duration: 100000, id: `rejection-${id}` }
+        { duration: 100000, id: `rejection-${id}` },
       );
     }
   }, [
@@ -283,7 +286,7 @@ export default function ProposalEditorPage({
           if (proposal?.activations && proposal.activations.length > 0) {
             try {
               const activationIds = proposal.activations.map(
-                (pa) => pa.activation.id
+                (pa) => pa.activation.id,
               );
               await bulkRemoveActivationsMutation.mutateAsync(activationIds);
             } catch (error) {
@@ -318,7 +321,7 @@ export default function ProposalEditorPage({
       ) {
         // Check if there are new brands that haven't been processed
         const newBrands = formData.brandIds.filter(
-          (brandId) => !processedBrandIds.includes(brandId)
+          (brandId) => !processedBrandIds.includes(brandId),
         );
 
         // Only proceed if there are new brands to process
@@ -341,15 +344,15 @@ export default function ProposalEditorPage({
               activation.year === formData.year &&
               newBrands.includes(activation.brandId) &&
               activation.status === "published" &&
-              activation.active
+              activation.active,
           );
 
           // Filter out activations that are already in the proposal
           const activationsToAdd = visibleActivations.filter(
             (activation) =>
               !proposal.activations?.some(
-                (pa) => pa.activation.id === activation.id
-              )
+                (pa) => pa.activation.id === activation.id,
+              ),
           );
 
           if (activationsToAdd.length > 0) {
@@ -360,9 +363,8 @@ export default function ProposalEditorPage({
             }));
 
             // Single API call to add all activations
-            const response: any = await bulkAddActivationsMutation.mutateAsync(
-              bulkData
-            );
+            const response: any =
+              await bulkAddActivationsMutation.mutateAsync(bulkData);
 
             // Wait for the refetch to complete to ensure stats update
             await queryClient.refetchQueries({ queryKey: ["proposal", id] });
@@ -371,7 +373,7 @@ export default function ProposalEditorPage({
             toast.success(
               `${response.data?.added || activationsToAdd.length} activation${
                 (response.data?.added || activationsToAdd.length) > 1 ? "s" : ""
-              } added automatically`
+              } added automatically`,
             );
           }
         } catch (error) {
@@ -420,7 +422,7 @@ export default function ProposalEditorPage({
   // Bulk add activations mutation (for auto-add)
   const bulkAddActivationsMutation = useMutation({
     mutationFn: (
-      data: Array<{ activationId: string; selectedMonths: number[] }>
+      data: Array<{ activationId: string; selectedMonths: number[] }>,
     ) =>
       api.post(`/api/proposals/${id}/activations/bulk`, { activations: data }),
     onSuccess: async () => {
@@ -467,7 +469,7 @@ export default function ProposalEditorPage({
         `/api/proposals/${id}/activations/${data.activationId}/remove-month`,
         {
           monthToRemove: data.monthToRemove,
-        }
+        },
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["proposal", id] });
@@ -678,7 +680,7 @@ export default function ProposalEditorPage({
     // If a specific month is provided, remove only that month
     if (monthToRemove && existingProposalActivation) {
       const remainingMonths = existingProposalActivation.selectedMonths.filter(
-        (m) => m !== monthToRemove
+        (m) => m !== monthToRemove,
       );
 
       // If no months remain, delete the entire activation
@@ -731,7 +733,7 @@ export default function ProposalEditorPage({
 
   const handleEditCommercial = (
     mode: "trade-deal" | "foc" | "credit-note",
-    data: any
+    data: any,
   ) => {
     setEditingCommercial({ mode, data });
     setIsCommercialDialogOpen(true);
@@ -739,7 +741,7 @@ export default function ProposalEditorPage({
 
   const handleDeleteCommercial = (
     type: "trade-deal" | "foc" | "credit-note",
-    id: string
+    id: string,
   ) => {
     setCommercialToDelete({ type, id });
     setDeleteDialogOpen(true);
@@ -793,7 +795,7 @@ export default function ProposalEditorPage({
       activation.year === (formData.year || proposal?.year) &&
       (formData.brandIds || []).includes(activation.brandId) &&
       activation.status === "published" &&
-      activation.active
+      activation.active,
   );
 
   // Create a stable global order for ALL activations to maintain consistent row positioning
@@ -804,7 +806,7 @@ export default function ProposalEditorPage({
       const currentMax = brandMaxFrequency.get(activation.brandId) || 0;
       brandMaxFrequency.set(
         activation.brandId,
-        Math.max(currentMax, activation.availableMonths.length)
+        Math.max(currentMax, activation.availableMonths.length),
       );
     });
 
@@ -823,7 +825,7 @@ export default function ProposalEditorPage({
       const brandA = getBrandForActivation(a.brandId);
       const brandB = getBrandForActivation(b.brandId);
       const brandCompare = (brandA?.name || "").localeCompare(
-        brandB?.name || ""
+        brandB?.name || "",
       );
 
       if (brandCompare !== 0) {
@@ -856,7 +858,7 @@ export default function ProposalEditorPage({
   // Check if activation is in proposal
   const getProposalActivation = (activationId: string) => {
     return proposal?.activations?.find(
-      (pa) => pa.activation.id === activationId
+      (pa) => pa.activation.id === activationId,
     );
   };
 
@@ -871,7 +873,7 @@ export default function ProposalEditorPage({
       : { minimumFractionDigits: 0, maximumFractionDigits: 0 };
 
     return new Intl.NumberFormat("en-AE", options).format(
-      typeof value === "string" ? parseFloat(value || "0") : value
+      typeof value === "string" ? parseFloat(value || "0") : value,
     );
   };
 
@@ -883,7 +885,7 @@ export default function ProposalEditorPage({
     }
     return `rgba(${parseInt(result[1], 16)}, ${parseInt(
       result[2],
-      16
+      16,
     )}, ${parseInt(result[3], 16)}, ${opacity})`;
   };
 
@@ -945,7 +947,7 @@ export default function ProposalEditorPage({
 
   // Calculate unique months across all activations
   const uniqueMonths = new Set(
-    proposal?.activations?.flatMap((pa) => pa.selectedMonths) || []
+    proposal?.activations?.flatMap((pa) => pa.selectedMonths) || [],
   );
   const activeMonthsCount = uniqueMonths.size;
 
@@ -954,7 +956,7 @@ export default function ProposalEditorPage({
     (sum, pa) => {
       return sum + parseFloat(pa.calculatedValue || "0");
     },
-    0
+    0,
   );
 
   // Use backend-calculated total value for accuracy
@@ -1074,7 +1076,7 @@ export default function ProposalEditorPage({
                 className={cn(
                   "rounded-md border-2 border-dashed border-muted-foreground/30 p-6 text-center transition-colors",
                   isDraft &&
-                    "hover:border-muted-foreground/50 hover:bg-muted/50 cursor-pointer"
+                    "hover:border-muted-foreground/50 hover:bg-muted/50 cursor-pointer",
                 )}
               >
                 <Plus className="h-5 w-5 mx-auto mb-2 text-muted-foreground" />
@@ -1204,7 +1206,7 @@ export default function ProposalEditorPage({
                                       onClick={() =>
                                         handleDeleteCommercial(
                                           "trade-deal",
-                                          td.id
+                                          td.id,
                                         )
                                       }
                                     >
@@ -1316,7 +1318,7 @@ export default function ProposalEditorPage({
                                       onClick={() =>
                                         handleDeleteCommercial(
                                           "credit-note",
-                                          cn.id
+                                          cn.id,
                                         )
                                       }
                                     >
@@ -1530,7 +1532,7 @@ export default function ProposalEditorPage({
                   <div
                     key={month}
                     className={cn(
-                      "rounded-2xl bg-muted-foreground/10 overflow-hidden border transition-all"
+                      "rounded-2xl bg-muted-foreground/10 overflow-hidden border transition-all",
                     )}
                   >
                     {/* Month Header */}
@@ -1541,19 +1543,19 @@ export default function ProposalEditorPage({
                         <div className="text-xs text-muted-foreground">
                           {
                             monthActivations.filter(
-                              (item) => item.isAvailableThisMonth
+                              (item) => item.isAvailableThisMonth,
                             ).length
                           }{" "}
                           Activation
                           {monthActivations.filter(
-                            (item) => item.isAvailableThisMonth
+                            (item) => item.isAvailableThisMonth,
                           ).length !== 1
                             ? "s"
                             : ""}
                         </div>
                         {isEditable &&
                           monthActivations.some(
-                            (item) => item.isAvailableThisMonth
+                            (item) => item.isAvailableThisMonth,
                           ) && (
                             <Button
                               variant="ghost"
@@ -1574,7 +1576,7 @@ export default function ProposalEditorPage({
                     {/* Activations List */}
                     <div className="p-2 min-h-[200px] max-h-[200px] overflow-y-auto flex flex-col-reverse gap-y-1">
                       {monthActivations.every(
-                        (item) => !item.isAvailableThisMonth
+                        (item) => !item.isAvailableThisMonth,
                       ) ? (
                         <div className="text-xs text-muted-foreground text-center py-4">
                           No activations
@@ -1594,19 +1596,19 @@ export default function ProposalEditorPage({
                             }
 
                             const proposalActivation = getProposalActivation(
-                              activation.id
+                              activation.id,
                             );
                             const brand = getBrandForActivation(
-                              activation.brandId
+                              activation.brandId,
                             );
                             // Check if this specific month is selected in the proposal
                             const isSelectedForThisMonth =
                               proposalActivation?.selectedMonths.includes(
-                                month
+                                month,
                               ) || false;
 
                             const handleQuickToggle = async (
-                              e: React.MouseEvent
+                              e: React.MouseEvent,
                             ) => {
                               e.stopPropagation();
 
@@ -1614,19 +1616,19 @@ export default function ProposalEditorPage({
                                 // REMOVING: For fixed activations, always remove the entire activation
                                 if (activation.activationType === "fixed") {
                                   await removeActivationMutation.mutateAsync(
-                                    activation.id
+                                    activation.id,
                                   );
                                 } else {
                                   // For variable activations, remove just this month
                                   const remainingMonths =
                                     proposalActivation!.selectedMonths.filter(
-                                      (m) => m !== month
+                                      (m) => m !== month,
                                     );
 
                                   if (remainingMonths.length === 0) {
                                     // Remove entire activation if no months remain
                                     await removeActivationMutation.mutateAsync(
-                                      activation.id
+                                      activation.id,
                                     );
                                   } else {
                                     // Remove just this month
@@ -1639,16 +1641,37 @@ export default function ProposalEditorPage({
                               } else {
                                 // ADDING: For fixed activations, must select ALL available months
                                 if (activation.activationType === "fixed") {
+                                  // For fixed activations, if already in proposal, remove it first then add all months
+                                  if (proposalActivation) {
+                                    await removeActivationMutation.mutateAsync(
+                                      activation.id,
+                                    );
+                                  }
+                                  // Add with ALL available months
                                   await addActivationMutation.mutateAsync({
                                     activationId: activation.id,
                                     selectedMonths: activation.availableMonths,
                                   });
                                 } else {
                                   // For variable activations, add just this month
-                                  await addActivationMutation.mutateAsync({
-                                    activationId: activation.id,
-                                    selectedMonths: [month],
-                                  });
+                                  // If activation exists, we're adding a new month to it
+                                  if (proposalActivation) {
+                                    // Add this month to existing selection
+                                    const newMonths = [
+                                      ...proposalActivation.selectedMonths,
+                                      month,
+                                    ];
+                                    await addActivationMutation.mutateAsync({
+                                      activationId: activation.id,
+                                      selectedMonths: newMonths,
+                                    });
+                                  } else {
+                                    // New activation, add just this month
+                                    await addActivationMutation.mutateAsync({
+                                      activationId: activation.id,
+                                      selectedMonths: [month],
+                                    });
+                                  }
                                 }
                               }
                             };
@@ -1660,7 +1683,7 @@ export default function ProposalEditorPage({
                                   handleActivationClick(activation, month)
                                 }
                                 className={cn(
-                                  "w-full text-left rounded-lg p-1 text-xs transition-all hover:shadow-md relative overflow-hidden flex items-center cursor-pointer"
+                                  "w-full text-left rounded-lg p-1 text-xs transition-all hover:shadow-md relative overflow-hidden flex items-center cursor-pointer group",
                                 )}
                                 style={{
                                   backgroundColor: brand?.primaryColor
@@ -1668,29 +1691,43 @@ export default function ProposalEditorPage({
                                     : "rgba(243, 244, 246, 1)",
                                 }}
                               >
-                                {/* Status Icon - Only show in edit mode */}
-                                {isMonthInEditMode && (
+                                {/* Add/Remove Icon - Always visible on hover or when selected */}
+                                {isEditable && (
                                   <button
                                     onClick={handleQuickToggle}
-                                    className="absolute right-2 z-10 hover:scale-110 transition-transform"
+                                    className={cn(
+                                      "absolute right-1 z-10 hover:scale-110 transition-all",
+                                      isSelectedForThisMonth
+                                        ? "opacity-100"
+                                        : "opacity-0 group-hover:opacity-100",
+                                    )}
                                     disabled={!isEditable}
                                   >
                                     {isSelectedForThisMonth ? (
-                                      <XCircle className="h-4 w-4 text-[#DD3737]" />
+                                      <X className="h-3.5 w-3.5 text-red-500 bg-white/90 rounded-full p-0.5" />
                                     ) : (
-                                      <CirclePlus className="h-4 w-4 text-[#32C266]" />
+                                      <CirclePlus className="h-3.5 w-3.5 text-green-500 bg-white border-0 rounded-full " />
                                     )}
                                   </button>
                                 )}
 
                                 {/* Content */}
-                                <div className="flex items-center gap-2 pr-6">
+                                <div className="flex items-center gap-1.5 pr-5">
+                                  {/* Fixed/Variable Icon */}
+                                  <div className="flex-shrink-0">
+                                    {activation.activationType === "fixed" ? (
+                                      <Lock className="h-3 w-3 text-muted-foreground/60" />
+                                    ) : (
+                                      <Shuffle className="h-3 w-3 text-muted-foreground/60" />
+                                    )}
+                                  </div>
+
                                   {/* Brand Logo */}
                                   {brand?.logoUrl ? (
                                     <img
                                       src={brand.logoUrl}
                                       alt={brand.name}
-                                      className="w-4 h-4 rounded-full object-cover flex-shrink-0 "
+                                      className="w-4 h-4 rounded-full object-cover flex-shrink-0"
                                     />
                                   ) : (
                                     <div
@@ -1720,7 +1757,7 @@ export default function ProposalEditorPage({
                                 </div>
                               </button>
                             );
-                          }
+                          },
                         )
                       )}
                     </div>
@@ -1878,7 +1915,7 @@ export default function ProposalEditorPage({
                   "flex-1 rounded-xl text-white h-full  flex flex-col justify-between bg-proposaltwo p-4",
                   parseFloat(proposal?.tradeDealValue || "0") > 0
                     ? "bg-proposaltwo "
-                    : "border-2 border-dashed border-muted-foreground/50"
+                    : "border-2 border-dashed border-muted-foreground/50",
                 )}
               >
                 {parseFloat(proposal?.tradeDealValue || "0") > 0 && (
@@ -1900,7 +1937,7 @@ export default function ProposalEditorPage({
                   "flex-1 rounded-xl text-white h-full  flex flex-col justify-between bg-proposaltwo p-4",
                   parseFloat(proposal?.focValue || "0") > 0
                     ? "bg-proposaltwo "
-                    : "border-2 border-dashed border-muted-foreground/50"
+                    : "border-2 border-dashed border-muted-foreground/50",
                 )}
               >
                 {parseFloat(proposal?.focValue || "0") > 0 && (
@@ -1924,7 +1961,7 @@ export default function ProposalEditorPage({
                   "flex-1 rounded-xl text-white h-full  flex flex-col justify-between bg-proposaltwo p-4",
                   parseFloat(proposal?.creditNoteValue || "0") > 0
                     ? "bg-proposaltwo "
-                    : "border-2 border-dashed border-muted-foreground/50"
+                    : "border-2 border-dashed border-muted-foreground/50",
                 )}
               >
                 {parseFloat(proposal?.creditNoteValue || "0") > 0 && (
@@ -1946,7 +1983,7 @@ export default function ProposalEditorPage({
             <div
               className={cn(
                 "relative h-full  z-10 rounded-2xl overflow-hidden bg-gradient-to-b from-[#AB1A2D] via-[#E8374E] to-[#E43A50] flex flex-col justify-between",
-                selectedVenue?.boosterEligible && "h-32"
+                selectedVenue?.boosterEligible && "h-32",
               )}
             >
               <svg
@@ -2207,8 +2244,8 @@ export default function ProposalEditorPage({
               {commercialToDelete?.type === "trade-deal"
                 ? "trade deal"
                 : commercialToDelete?.type === "foc"
-                ? "FOC"
-                : "credit note"}
+                  ? "FOC"
+                  : "credit note"}
               ? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
