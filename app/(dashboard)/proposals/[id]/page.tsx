@@ -964,14 +964,13 @@ export default function ProposalEditorPage({
 
   return (
     <div className="flex flex-1 flex-col gap-4 py-8 relative">
-      {/* Loading Overlay during auto-add */}
-      {isAutoAddingActivations && (
+      {/* Loading Overlay during auto-add or manual add/remove */}
+      {(isAutoAddingActivations ||
+        addActivationMutation.isPending ||
+        removeActivationMutation.isPending ||
+        removeMonthMutation.isPending) && (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
-          <div className="bg-card p-6 rounded-lg shadow-lg border flex flex-col items-center gap-4">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-sm font-medium">Updating activations...</p>
-            <p className="text-xs text-muted-foreground">Please wait</p>
-          </div>
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       )}
 

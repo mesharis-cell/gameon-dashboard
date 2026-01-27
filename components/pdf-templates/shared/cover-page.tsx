@@ -60,9 +60,13 @@ export function CoverPage({
       <div className="cover-content">
         <div className="proposal-label">PARTNERSHIP PROPOSAL {year}</div>
         <div className="venue-name">{venueName}</div>
-        <div className="venue-tier">
-          {capitalizeTier(venueTier)} Tier Account
-        </div>
+        {venueTier.toLowerCase() === "gold" ? (
+          <div className="venue-tier">
+            {capitalizeTier(venueTier)} Tier Account
+          </div>
+        ) : (
+          <div className="venue-tier"></div>
+        )}
 
         <div className="value-box">
           <div className="value-label">TOTAL PACKAGE VALUE</div>

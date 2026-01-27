@@ -214,20 +214,11 @@ interface DetailedTemplateProps {
 
 /**
  * Calculate total pages dynamically based on number of activations
- * COMMENTED OUT: Using fixed 4 pages to match reference HTML (single activation page)
- */
-// function calculateTotalPages(activationCount: number): number {
-//   const activationsPerPage = 2;
-//   const activationPages = Math.ceil(activationCount / activationsPerPage);
-//   return 1 + 1 + activationPages + 1; // Cover + Calendar + Activation Pages + Breakdown
-// }
-
-/**
- * Fixed 4 pages: Cover (1) + Calendar (1) + Activation Details (1) + Breakdown (1)
- * All activations are on a single page with browser-controlled overflow
+ * One activation per page
  */
 function calculateTotalPages(activationCount: number): number {
-  return 4; // Fixed 4 pages to match reference HTML design
+  // Cover (1) + Calendar (1) + Activation Pages (N, one per activation) + Breakdown (1)
+  return 1 + 1 + activationCount + 1;
 }
 
 export function DetailedTemplate({ proposal }: DetailedTemplateProps) {

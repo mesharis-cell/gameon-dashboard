@@ -58,18 +58,21 @@ export function SimpleTemplate({ proposal }: SimpleTemplateProps) {
   // Get activations for a specific month, grouped by brand
   const getActivationsForMonth = (month: number) => {
     const monthActivations = proposal.activations.filter((pa) =>
-      pa.selectedMonths.includes(month)
+      pa.selectedMonths.includes(month),
     );
 
     // Group by brand
-    const grouped = monthActivations.reduce((acc, pa) => {
-      const brandId = pa.activation.brandId;
-      if (!acc[brandId]) {
-        acc[brandId] = [];
-      }
-      acc[brandId].push(pa);
-      return acc;
-    }, {} as Record<string, ProposalActivation[]>);
+    const grouped = monthActivations.reduce(
+      (acc, pa) => {
+        const brandId = pa.activation.brandId;
+        if (!acc[brandId]) {
+          acc[brandId] = [];
+        }
+        acc[brandId].push(pa);
+        return acc;
+      },
+      {} as Record<string, ProposalActivation[]>,
+    );
 
     return grouped;
   };
@@ -83,9 +86,13 @@ export function SimpleTemplate({ proposal }: SimpleTemplateProps) {
             PARTNERSHIP PROPOSAL {proposal.year}
           </div>
           <div className="venue-name">{proposal.venue.name}</div>
-          <div className="venue-tier">
-            {capitalizeTier(proposal.venue.tier)} Tier Account
-          </div>
+          {proposal.venue.tier.toLowerCase() === "gold" ? (
+            <div className="venue-tier">
+              {capitalizeTier(proposal.venue.tier)} Tier Account
+            </div>
+          ) : (
+            <div className="venue-tier"></div>
+          )}
           <div className="kam-info">
             Prepared by {proposal.creator.name} •{" "}
             {formatDate(proposal.createdAt)}
