@@ -85,7 +85,7 @@ export default function ImportPage() {
 
       const response: any = await api.post(
         `/api/import/${data.type}`,
-        formData
+        formData,
       );
       return response.data as ImportResult;
     },
@@ -97,14 +97,14 @@ export default function ImportPage() {
       if (data.success) {
         setFile(null);
         const fileInput = document.getElementById(
-          "file-upload"
+          "file-upload",
         ) as HTMLInputElement;
         if (fileInput) fileInput.value = "";
         toast.success(`Successfully imported ${data.imported} ${importType}`);
       } else if (data.imported > 0) {
         // Partial import - auto-download error report
         toast.warning(
-          `Partial import: ${data.imported} succeeded, ${data.failed} failed`
+          `Partial import: ${data.imported} succeeded, ${data.failed} failed`,
         );
         await downloadErrorReport(data.jobId);
       } else {
@@ -197,7 +197,7 @@ export default function ImportPage() {
         `${process.env.NEXT_PUBLIC_API_URL}/api/import/jobs/${jobId}/errors`,
         {
           credentials: "include",
-        }
+        },
       );
 
       if (!response.ok) {
@@ -310,7 +310,7 @@ export default function ImportPage() {
                       setResult(null);
                       // Reset the file input
                       const fileInput = document.getElementById(
-                        "file-upload"
+                        "file-upload",
                       ) as HTMLInputElement;
                       if (fileInput) fileInput.value = "";
                     }}
@@ -529,7 +529,12 @@ export default function ImportPage() {
               <li>
                 Brand names must exist in the system (case-insensitive match)
               </li>
-              <li>User emails must exist for venue assignment</li>
+              <li>
+                <strong>assignedUserEmail is REQUIRED for venues</strong> -
+                every venue must be assigned to a user. Import will fail if this
+                field is empty.
+              </li>
+              <li>User emails must exist in the system before importing</li>
               <li>Tier must be: gold, silver, or bronze</li>
               <li>Activation type must be: fixed or variable</li>
             </ul>

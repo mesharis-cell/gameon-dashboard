@@ -60,6 +60,9 @@ import {
   Trash,
   Info,
   Presentation,
+  Lock,
+  Shuffle,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAutoSave } from "@/lib/hooks/use-auto-save";
@@ -69,9 +72,18 @@ import { ActivationSelectionSheet } from "../components/activation-selection-she
 import { VenueFormDialog } from "../../venues/components/venue-form-dialog";
 import { CommercialModal } from "@/components/features/proposals/commercial-modal";
 import { cn } from "@/lib/utils";
-import type { Proposal, UpdateProposalData, Activation, Brand } from "@/lib/types/proposals";
+import type {
+  Proposal,
+  UpdateProposalData,
+  Activation,
+  Brand,
+} from "@/lib/types/proposals";
 import { MONTH_NAMES } from "@/lib/types/proposals";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface ProposalEditorPageProps {
   params: Promise<{ id: string }>;
@@ -88,7 +100,9 @@ interface Venue {
 const currentYear = new Date().getFullYear();
 const years = Array.from({ length: 5 }, (_, i) => currentYear + i);
 
-export default function ProposalEditorPage({ params }: ProposalEditorPageProps) {
+export default function ProposalEditorPage({
+  params,
+}: ProposalEditorPageProps) {
   const { id } = use(params);
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -98,12 +112,14 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
   const { setIsSaving, setLastSaved, setProposalStatus } = useProposalStatus();
 
   const [isEditingName, setIsEditingName] = useState(false);
-  const [selectedActivation, setSelectedActivation] = useState<Activation | null>(null);
+  const [selectedActivation, setSelectedActivation] =
+    useState<Activation | null>(null);
   const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
   const [isActivationSheetOpen, setIsActivationSheetOpen] = useState(false);
   const [isVenueDialogOpen, setIsVenueDialogOpen] = useState(false);
   const [isCommercialDialogOpen, setIsCommercialDialogOpen] = useState(false);
-  const [commercialDetailsExpanded, setCommercialDetailsExpanded] = useState(false);
+  const [commercialDetailsExpanded, setCommercialDetailsExpanded] =
+    useState(false);
   const [editingCommercial, setEditingCommercial] = useState<{
     mode: "trade-deal" | "foc" | "credit-note";
     data: any;
@@ -116,10 +132,11 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
     id: string;
   } | null>(null);
   const [isAutoAddingActivations, setIsAutoAddingActivations] = useState(false);
-  const [lastProcessedVenueId, setLastProcessedVenueId] = useState<string | undefined>(undefined);
+  const [lastProcessedVenueId, setLastProcessedVenueId] = useState<
+    string | undefined
+  >(undefined);
   const [processedBrandIds, setProcessedBrandIds] = useState<string[]>([]);
   const [editingMonths, setEditingMonths] = useState<Set<number>>(new Set());
-  const [togglingActivation, setTogglingActivation] = useState<string | null>(null);
 
   // Duplicate mutation
   const duplicateMutation = useMutation({
@@ -206,7 +223,8 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
   // Show rejection details toast when viewing rejected proposal
   useEffect(() => {
     if (proposal?.status === "rejected" && proposal.decisionNotes) {
-      const deciderName = proposal.decider?.name || proposal.decider?.email || "Unknown";
+      const deciderName =
+        proposal.decider?.name || proposal.decider?.email || "Unknown";
       const decidedDate = proposal.decidedAt
         ? new Date(proposal.decidedAt).toLocaleString("en-US", {
             dateStyle: "medium",
@@ -230,10 +248,16 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
             </div>
           </div>
         ),
-        { duration: 100000, id: `rejection-${id}` }
+        { duration: 100000, id: `rejection-${id}` },
       );
     }
-  }, [proposal?.status, proposal?.decisionNotes, proposal?.decider, proposal?.decidedAt, id]);
+  }, [
+    proposal?.status,
+    proposal?.decisionNotes,
+    proposal?.decider,
+    proposal?.decidedAt,
+    id,
+  ]);
 
   // Auto-populate brands when venue changes and sync immediately
   useEffect(() => {
@@ -261,7 +285,9 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
         const removeAllActivations = async () => {
           if (proposal?.activations && proposal.activations.length > 0) {
             try {
-              const activationIds = proposal.activations.map((pa) => pa.activation.id);
+              const activationIds = proposal.activations.map(
+                (pa) => pa.activation.id,
+              );
               await bulkRemoveActivationsMutation.mutateAsync(activationIds);
             } catch (error) {
               console.error("Failed to remove old activations:", error);
@@ -271,9 +297,11 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
 
         removeAllActivations().then(() => {
           // Immediately sync brands to backend for real-time booster calculation
-          updateMutation.mutateAsync({ brandIds: newBrandIds }).catch((error) => {
-            console.error("Failed to auto-populate brands:", error);
-          });
+          updateMutation
+            .mutateAsync({ brandIds: newBrandIds })
+            .catch((error) => {
+              console.error("Failed to auto-populate brands:", error);
+            });
         });
       }
     }
@@ -293,7 +321,7 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
       ) {
         // Check if there are new brands that haven't been processed
         const newBrands = formData.brandIds.filter(
-          (brandId) => !processedBrandIds.includes(brandId)
+          (brandId) => !processedBrandIds.includes(brandId),
         );
 
         // Only proceed if there are new brands to process
@@ -316,12 +344,15 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
               activation.year === formData.year &&
               newBrands.includes(activation.brandId) &&
               activation.status === "published" &&
-              activation.active
+              activation.active,
           );
 
           // Filter out activations that are already in the proposal
           const activationsToAdd = visibleActivations.filter(
-            (activation) => !proposal.activations?.some((pa) => pa.activation.id === activation.id)
+            (activation) =>
+              !proposal.activations?.some(
+                (pa) => pa.activation.id === activation.id,
+              ),
           );
 
           if (activationsToAdd.length > 0) {
@@ -332,7 +363,8 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
             }));
 
             // Single API call to add all activations
-            const response: any = await bulkAddActivationsMutation.mutateAsync(bulkData);
+            const response: any =
+              await bulkAddActivationsMutation.mutateAsync(bulkData);
 
             // Wait for the refetch to complete to ensure stats update
             await queryClient.refetchQueries({ queryKey: ["proposal", id] });
@@ -341,7 +373,7 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
             toast.success(
               `${response.data?.added || activationsToAdd.length} activation${
                 (response.data?.added || activationsToAdd.length) > 1 ? "s" : ""
-              } added automatically`
+              } added automatically`,
             );
           }
         } catch (error) {
@@ -366,7 +398,8 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
 
   // Update mutation
   const updateMutation = useMutation({
-    mutationFn: (data: UpdateProposalData) => api.patch(`/api/proposals/${id}`, data),
+    mutationFn: (data: UpdateProposalData) =>
+      api.patch(`/api/proposals/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["proposal", id] });
       setLastSaved(new Date());
@@ -388,7 +421,9 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
 
   // Bulk add activations mutation (for auto-add)
   const bulkAddActivationsMutation = useMutation({
-    mutationFn: (data: Array<{ activationId: string; selectedMonths: number[] }>) =>
+    mutationFn: (
+      data: Array<{ activationId: string; selectedMonths: number[] }>,
+    ) =>
       api.post(`/api/proposals/${id}/activations/bulk`, { activations: data }),
     onSuccess: async () => {
       // Invalidate and refetch to ensure UI updates immediately
@@ -430,9 +465,12 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
   // Remove specific month from activation mutation
   const removeMonthMutation = useMutation({
     mutationFn: (data: { activationId: string; monthToRemove: number }) =>
-      api.patch(`/api/proposals/${id}/activations/${data.activationId}/remove-month`, {
-        monthToRemove: data.monthToRemove,
-      }),
+      api.patch(
+        `/api/proposals/${id}/activations/${data.activationId}/remove-month`,
+        {
+          monthToRemove: data.monthToRemove,
+        },
+      ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["proposal", id] });
       toast.success("Month removed successfully");
@@ -444,7 +482,8 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
 
   // Delete commercial element mutations
   const deleteTradeDealMutation = useMutation({
-    mutationFn: (tdId: string) => api.delete(`/api/commercial/trade-deals/${tdId}`),
+    mutationFn: (tdId: string) =>
+      api.delete(`/api/commercial/trade-deals/${tdId}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["proposal", id] });
       toast.success("Trade deal deleted successfully");
@@ -466,7 +505,8 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
   });
 
   const deleteCreditNoteMutation = useMutation({
-    mutationFn: (cnId: string) => api.delete(`/api/commercial/credit-notes/${cnId}`),
+    mutationFn: (cnId: string) =>
+      api.delete(`/api/commercial/credit-notes/${cnId}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["proposal", id] });
       toast.success("Credit note deleted successfully");
@@ -503,7 +543,8 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
 
   // Reject mutation
   const rejectMutation = useMutation({
-    mutationFn: (notes: string) => api.post(`/api/proposals/${id}/reject`, { notes }),
+    mutationFn: (notes: string) =>
+      api.post(`/api/proposals/${id}/reject`, { notes }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["proposal", id] });
       toast.success("Proposal rejected");
@@ -515,40 +556,10 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
     },
   });
 
-  // Document generation mutations
-  const generatePdfMutation = useMutation({
-    mutationFn: (level: "simple" | "standard" | "detailed") =>
-      api.post(`/api/documents/pdf/${id}?level=${level}`, {}),
-    onSuccess: async (response: any) => {
-      const url = response.data?.url;
-      if (url) {
-        try {
-          // Fetch the file as a blob
-          const fileResponse = await fetch(url);
-          const blob = await fileResponse.blob();
-
-          // Create a blob URL and trigger download
-          const blobUrl = window.URL.createObjectURL(blob);
-          const link = document.createElement("a");
-          link.href = blobUrl;
-          link.download = `proposal-${proposal?.name || id}.pdf`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-
-          // Clean up the blob URL
-          window.URL.revokeObjectURL(blobUrl);
-          toast.success("PDF downloaded successfully");
-        } catch (error) {
-          console.error("Download error:", error);
-          toast.error("Failed to download PDF");
-        }
-      }
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || "Failed to generate PDF");
-    },
-  });
+  // PDF generation - Client-side with window.print()
+  const handleGeneratePdf = (level: "simple" | "standard" | "detailed") => {
+    window.open(`/proposals/${id}/pdf/${level}`, "_blank");
+  };
 
   const generatePptMutation = useMutation({
     mutationFn: () => api.post(`/api/documents/ppt/${id}`, {}),
@@ -669,7 +680,7 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
     // If a specific month is provided, remove only that month
     if (monthToRemove && existingProposalActivation) {
       const remainingMonths = existingProposalActivation.selectedMonths.filter(
-        (m) => m !== monthToRemove
+        (m) => m !== monthToRemove,
       );
 
       // If no months remain, delete the entire activation
@@ -720,12 +731,18 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
     }
   };
 
-  const handleEditCommercial = (mode: "trade-deal" | "foc" | "credit-note", data: any) => {
+  const handleEditCommercial = (
+    mode: "trade-deal" | "foc" | "credit-note",
+    data: any,
+  ) => {
     setEditingCommercial({ mode, data });
     setIsCommercialDialogOpen(true);
   };
 
-  const handleDeleteCommercial = (type: "trade-deal" | "foc" | "credit-note", id: string) => {
+  const handleDeleteCommercial = (
+    type: "trade-deal" | "foc" | "credit-note",
+    id: string,
+  ) => {
     setCommercialToDelete({ type, id });
     setDeleteDialogOpen(true);
   };
@@ -778,7 +795,7 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
       activation.year === (formData.year || proposal?.year) &&
       (formData.brandIds || []).includes(activation.brandId) &&
       activation.status === "published" &&
-      activation.active
+      activation.active,
   );
 
   // Create a stable global order for ALL activations to maintain consistent row positioning
@@ -789,7 +806,7 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
       const currentMax = brandMaxFrequency.get(activation.brandId) || 0;
       brandMaxFrequency.set(
         activation.brandId,
-        Math.max(currentMax, activation.availableMonths.length)
+        Math.max(currentMax, activation.availableMonths.length),
       );
     });
 
@@ -807,7 +824,9 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
       // If brands have same max frequency, sort by brand name alphabetically
       const brandA = getBrandForActivation(a.brandId);
       const brandB = getBrandForActivation(b.brandId);
-      const brandCompare = (brandA?.name || "").localeCompare(brandB?.name || "");
+      const brandCompare = (brandA?.name || "").localeCompare(
+        brandB?.name || "",
+      );
 
       if (brandCompare !== 0) {
         return brandCompare;
@@ -838,7 +857,9 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
 
   // Check if activation is in proposal
   const getProposalActivation = (activationId: string) => {
-    return proposal?.activations?.find((pa) => pa.activation.id === activationId);
+    return proposal?.activations?.find(
+      (pa) => pa.activation.id === activationId,
+    );
   };
 
   const formatCurrency = (value: string | number, withCurrency = true) => {
@@ -852,7 +873,7 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
       : { minimumFractionDigits: 0, maximumFractionDigits: 0 };
 
     return new Intl.NumberFormat("en-AE", options).format(
-      typeof value === "string" ? parseFloat(value || "0") : value
+      typeof value === "string" ? parseFloat(value || "0") : value,
     );
   };
 
@@ -862,10 +883,10 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
     if (!result || !result[1] || !result[2] || !result[3]) {
       return `rgba(243, 244, 246, ${opacity})`; // fallback to gray
     }
-    return `rgba(${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(
-      result[3],
-      16
-    )}, ${opacity})`;
+    return `rgba(${parseInt(result[1], 16)}, ${parseInt(
+      result[2],
+      16,
+    )}, ${parseInt(result[3], 16)}, ${opacity})`;
   };
 
   if (isLoading) {
@@ -880,7 +901,9 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-4">
         <p className="text-lg text-muted-foreground">Proposal not found</p>
-        <Button onClick={() => router.push("/proposals")}>Back to Proposals</Button>
+        <Button onClick={() => router.push("/proposals")}>
+          Back to Proposals
+        </Button>
       </div>
     );
   }
@@ -891,11 +914,14 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
   const canManageProposal =
     hasPermission("proposal:admin:all") ||
     (hasPermission("proposal:manage:own") && proposal.creator?.id === user?.id);
-  const isEditable = canManageProposal && (isDraft || (!!proposal.dataFrozenAt && canEditFrozen));
+  const isEditable =
+    canManageProposal &&
+    (isDraft || (!!proposal.dataFrozenAt && canEditFrozen));
   const selectedVenue = venues.find((v) => v.id === formData.venueId);
 
   // Check if user can manage venues
-  const canManageVenues = hasPermission("venue:manage:own") || hasPermission("venue:manage:all");
+  const canManageVenues =
+    hasPermission("venue:manage:own") || hasPermission("venue:manage:all");
 
   // Check if user can submit proposals
   const canSubmitProposal = hasPermission("proposal:submit:own");
@@ -920,32 +946,31 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
     (proposal?.creditNotes?.length || 0);
 
   // Calculate unique months across all activations
-  const uniqueMonths = new Set(proposal?.activations?.flatMap((pa) => pa.selectedMonths) || []);
+  const uniqueMonths = new Set(
+    proposal?.activations?.flatMap((pa) => pa.selectedMonths) || [],
+  );
   const activeMonthsCount = uniqueMonths.size;
 
   // Calculate activation value (sum of all selected activations)
-  const calculatedActivationValue = (proposal?.activations || []).reduce((sum, pa) => {
-    return sum + parseFloat(pa.calculatedValue || "0");
-  }, 0);
+  const calculatedActivationValue = (proposal?.activations || []).reduce(
+    (sum, pa) => {
+      return sum + parseFloat(pa.calculatedValue || "0");
+    },
+    0,
+  );
 
-  // Calculate total value
-  const calculatedTotalValue =
-    calculatedActivationValue +
-    parseFloat(proposal?.tradeDealValue || "0") +
-    parseFloat(proposal?.focValue || "0") +
-    parseFloat(proposal?.creditNoteValue || "0") +
-    parseFloat(proposal?.boosterValue || "0");
+  // Use backend-calculated total value for accuracy
+  const calculatedTotalValue = parseFloat(proposal?.totalValue || "0");
 
   return (
     <div className="flex flex-1 flex-col gap-4 py-8 relative">
-      {/* Loading Overlay during auto-add */}
-      {isAutoAddingActivations && (
+      {/* Loading Overlay during auto-add or manual add/remove */}
+      {(isAutoAddingActivations ||
+        addActivationMutation.isPending ||
+        removeActivationMutation.isPending ||
+        removeMonthMutation.isPending) && (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
-          <div className="bg-card p-6 rounded-lg shadow-lg border flex flex-col items-center gap-4">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-sm font-medium">Updating activations...</p>
-            <p className="text-xs text-muted-foreground">Please wait</p>
-          </div>
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       )}
 
@@ -963,7 +988,10 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
                 {isDummyProposal ? "Venue Tier" : "Select Venue"}
               </div>
               {isEditable && canManageVenues && (
-                <Button variant="outline" onClick={() => setIsVenueDialogOpen(true)}>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsVenueDialogOpen(true)}
+                >
                   <Plus /> <p className="text-xs">Add</p>
                 </Button>
               )}
@@ -1035,7 +1063,9 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
 
           {/* Commercial Add-ons */}
           <div className="grid gap-2 mt-4">
-            <div className="text-xs text-muted-foreground">Commercial Add-ons</div>
+            <div className="text-xs text-muted-foreground">
+              Commercial Add-ons
+            </div>
 
             {!hasCommercialAddons ? (
               /* Empty State - Dashed Border Button */
@@ -1044,11 +1074,14 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
                 disabled={!isEditable}
                 className={cn(
                   "rounded-md border-2 border-dashed border-muted-foreground/30 p-6 text-center transition-colors",
-                  isDraft && "hover:border-muted-foreground/50 hover:bg-muted/50 cursor-pointer"
+                  isDraft &&
+                    "hover:border-muted-foreground/50 hover:bg-muted/50 cursor-pointer",
                 )}
               >
                 <Plus className="h-5 w-5 mx-auto mb-2 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">Add Commercial Element</p>
+                <p className="text-sm text-muted-foreground">
+                  Add Commercial Element
+                </p>
               </button>
             ) : (
               /* Show Commercial Add-ons */
@@ -1112,10 +1145,14 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
           {hasCommercialAddons && totalCommercialElements > 0 && (
             <div className="grid gap-2 mt-2">
               <button
-                onClick={() => setCommercialDetailsExpanded(!commercialDetailsExpanded)}
+                onClick={() =>
+                  setCommercialDetailsExpanded(!commercialDetailsExpanded)
+                }
                 className="flex items-center justify-between text-xs text-muted-foreground hover:text-foreground transition-colors"
               >
-                <span>Commercial Details ({totalCommercialElements} items)</span>
+                <span>
+                  Commercial Details ({totalCommercialElements} items)
+                </span>
                 {commercialDetailsExpanded ? (
                   <ChevronDown className="h-3 w-3" />
                 ) : (
@@ -1138,7 +1175,9 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
                         >
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
-                              <div className="font-medium">{td.sku.productDescription}</div>
+                              <div className="font-medium">
+                                {td.sku.productDescription}
+                              </div>
                               <div className="text-muted-foreground">
                                 {td.mechanic} • {td.volume} units
                               </div>
@@ -1153,7 +1192,9 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
                                     <Button
                                       size="sm"
                                       variant="ghost"
-                                      onClick={() => handleEditCommercial("trade-deal", td)}
+                                      onClick={() =>
+                                        handleEditCommercial("trade-deal", td)
+                                      }
                                     >
                                       <Pencil className="p-0" />
                                     </Button>
@@ -1161,7 +1202,12 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
                                       size="sm"
                                       variant="ghost"
                                       className="text-xs p-0 text-destructive"
-                                      onClick={() => handleDeleteCommercial("trade-deal", td.id)}
+                                      onClick={() =>
+                                        handleDeleteCommercial(
+                                          "trade-deal",
+                                          td.id,
+                                        )
+                                      }
                                     >
                                       <Trash className=" p-0" />
                                     </Button>
@@ -1188,8 +1234,12 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
                         >
                           <div className="flex justify-between items-start">
                             <div className="flex-1">
-                              <div className="font-medium">{foc.sku.productDescription}</div>
-                              <div className="text-muted-foreground">{foc.volume} units</div>
+                              <div className="font-medium">
+                                {foc.sku.productDescription}
+                              </div>
+                              <div className="text-muted-foreground">
+                                {foc.volume} units
+                              </div>
                             </div>
                             <div className="flex flex-col">
                               <div className="font-bold text-blue-600">
@@ -1201,7 +1251,9 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
                                     <Button
                                       size="sm"
                                       variant="ghost"
-                                      onClick={() => handleEditCommercial("foc", foc)}
+                                      onClick={() =>
+                                        handleEditCommercial("foc", foc)
+                                      }
                                     >
                                       <Pencil className="p-0" />
                                     </Button>
@@ -1209,7 +1261,9 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
                                       size="sm"
                                       variant="ghost"
                                       className="text-xs text-destructive p-0"
-                                      onClick={() => handleDeleteCommercial("foc", foc.id)}
+                                      onClick={() =>
+                                        handleDeleteCommercial("foc", foc.id)
+                                      }
                                     >
                                       <Trash className="p-0" />
                                     </Button>
@@ -1236,7 +1290,9 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
                         >
                           <div className="flex justify-between items-start">
                             <div className="flex-1">
-                              <div className="font-medium">{cn.description || "Credit Note"}</div>
+                              <div className="font-medium">
+                                {cn.description || "Credit Note"}
+                              </div>
                             </div>
                             <div className="flex flex-col">
                               <div className="font-bold text-red-600">
@@ -1248,7 +1304,9 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
                                     <Button
                                       size="sm"
                                       variant="ghost"
-                                      onClick={() => handleEditCommercial("credit-note", cn)}
+                                      onClick={() =>
+                                        handleEditCommercial("credit-note", cn)
+                                      }
                                     >
                                       <Pencil className="p-0" />
                                     </Button>
@@ -1256,7 +1314,12 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
                                       size="sm"
                                       variant="ghost"
                                       className="text-destructive p-0"
-                                      onClick={() => handleDeleteCommercial("credit-note", cn.id)}
+                                      onClick={() =>
+                                        handleDeleteCommercial(
+                                          "credit-note",
+                                          cn.id,
+                                        )
+                                      }
                                     >
                                       <Trash className="h-3 w-3 p-0" />
                                     </Button>
@@ -1284,7 +1347,9 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
               {isEditingName ? (
                 <Input
                   value={formData.name}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, name: e.target.value }))
+                  }
                   onBlur={() => setIsEditingName(false)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") setIsEditingName(false);
@@ -1294,9 +1359,15 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
                 />
               ) : (
                 <>
-                  <span className="text-base font-medium">{formData.name || "New Proposal"}</span>
+                  <span className="text-base font-medium">
+                    {formData.name || "New Proposal"}
+                  </span>
                   {isEditable && (
-                    <Button onClick={() => setIsEditingName(true)} variant="ghost" size="icon">
+                    <Button
+                      onClick={() => setIsEditingName(true)}
+                      variant="ghost"
+                      size="icon"
+                    >
                       <Pencil className="h-4 w-4" />
                     </Button>
                   )}
@@ -1335,7 +1406,8 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
                 >
                   {isAutoSaving ? (
                     <>
-                      <Loader2 className="h-4 w-4 animate-spin" /> <p>Save draft</p>
+                      <Loader2 className="h-4 w-4 animate-spin" />{" "}
+                      <p>Save draft</p>
                     </>
                   ) : (
                     "Save draft"
@@ -1349,25 +1421,27 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
                   <div className="relative inline-flex">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="outline" disabled={generatePdfMutation.isPending}>
-                          {generatePdfMutation.isPending ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <FileText className="h-4 w-4" />
-                          )}
+                        <Button variant="outline">
+                          <FileText className="h-4 w-4" />
                           PDF
                           <Info className="h-1 w-1" />
                           <ChevronDown className="h-4 w-4 ml-2" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => generatePdfMutation.mutate("simple")}>
+                        <DropdownMenuItem
+                          onClick={() => handleGeneratePdf("simple")}
+                        >
                           Simple
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => generatePdfMutation.mutate("standard")}>
+                        <DropdownMenuItem
+                          onClick={() => handleGeneratePdf("standard")}
+                        >
                           Standard
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => generatePdfMutation.mutate("detailed")}>
+                        <DropdownMenuItem
+                          onClick={() => handleGeneratePdf("detailed")}
+                        >
                           Detailed
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -1438,11 +1512,7 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
                   className="flex items-center"
                   disabled={isAutoSaving || updateMutation.isPending}
                 >
-                  {updateMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <FileText />
-                  )}
+                  <FileText />
                   Review & Submit
                 </Button>
               )}
@@ -1461,7 +1531,7 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
                   <div
                     key={month}
                     className={cn(
-                      "rounded-2xl bg-muted-foreground/10 overflow-hidden border transition-all"
+                      "rounded-2xl bg-muted-foreground/10 overflow-hidden border transition-all",
                     )}
                   >
                     {/* Month Header */}
@@ -1470,14 +1540,22 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
 
                       <div className="flex items-center gap-2">
                         <div className="text-xs text-muted-foreground">
-                          {monthActivations.filter((item) => item.isAvailableThisMonth).length}{" "}
+                          {
+                            monthActivations.filter(
+                              (item) => item.isAvailableThisMonth,
+                            ).length
+                          }{" "}
                           Activation
-                          {monthActivations.filter((item) => item.isAvailableThisMonth).length !== 1
+                          {monthActivations.filter(
+                            (item) => item.isAvailableThisMonth,
+                          ).length !== 1
                             ? "s"
                             : ""}
                         </div>
                         {isEditable &&
-                          monthActivations.some((item) => item.isAvailableThisMonth) && (
+                          monthActivations.some(
+                            (item) => item.isAvailableThisMonth,
+                          ) && (
                             <Button
                               variant="ghost"
                               size="icon"
@@ -1496,50 +1574,61 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
 
                     {/* Activations List */}
                     <div className="p-2 min-h-[200px] max-h-[200px] overflow-y-auto flex flex-col-reverse gap-y-1">
-                      {monthActivations.every((item) => !item.isAvailableThisMonth) ? (
+                      {monthActivations.every(
+                        (item) => !item.isAvailableThisMonth,
+                      ) ? (
                         <div className="text-xs text-muted-foreground text-center py-4">
                           No activations
                         </div>
                       ) : (
-                        monthActivations.map(({ activation, isAvailableThisMonth }) => {
-                          // Render invisible placeholder for unavailable activations to maintain row positions
-                          if (!isAvailableThisMonth) {
-                            return (
-                              <div
-                                key={activation.id}
-                                className="w-full h-[28px]"
-                                style={{ visibility: "hidden" }}
-                              />
+                        monthActivations.map(
+                          ({ activation, isAvailableThisMonth }) => {
+                            // Render invisible placeholder for unavailable activations to maintain row positions
+                            if (!isAvailableThisMonth) {
+                              return (
+                                <div
+                                  key={activation.id}
+                                  className="w-full h-[28px]"
+                                  style={{ visibility: "hidden" }}
+                                />
+                              );
+                            }
+
+                            const proposalActivation = getProposalActivation(
+                              activation.id,
                             );
-                          }
+                            const brand = getBrandForActivation(
+                              activation.brandId,
+                            );
+                            // Check if this specific month is selected in the proposal
+                            const isSelectedForThisMonth =
+                              proposalActivation?.selectedMonths.includes(
+                                month,
+                              ) || false;
 
-                          const proposalActivation = getProposalActivation(activation.id);
-                          const brand = getBrandForActivation(activation.brandId);
-                          // Check if this specific month is selected in the proposal
-                          const isSelectedForThisMonth =
-                            proposalActivation?.selectedMonths.includes(month) || false;
+                            const handleQuickToggle = async (
+                              e: React.MouseEvent,
+                            ) => {
+                              e.stopPropagation();
 
-                          const toggleKey = `${activation.id}-${month}`;
-                          const isToggling = togglingActivation === toggleKey;
-
-                          const handleQuickToggle = async (e: React.MouseEvent) => {
-                            e.stopPropagation();
-                            setTogglingActivation(toggleKey);
-
-                            try {
                               if (isSelectedForThisMonth) {
                                 // REMOVING: For fixed activations, always remove the entire activation
                                 if (activation.activationType === "fixed") {
-                                  await removeActivationMutation.mutateAsync(activation.id);
+                                  await removeActivationMutation.mutateAsync(
+                                    activation.id,
+                                  );
                                 } else {
                                   // For variable activations, remove just this month
-                                  const remainingMonths = proposalActivation!.selectedMonths.filter(
-                                    (m) => m !== month
-                                  );
+                                  const remainingMonths =
+                                    proposalActivation!.selectedMonths.filter(
+                                      (m) => m !== month,
+                                    );
 
                                   if (remainingMonths.length === 0) {
                                     // Remove entire activation if no months remain
-                                    await removeActivationMutation.mutateAsync(activation.id);
+                                    await removeActivationMutation.mutateAsync(
+                                      activation.id,
+                                    );
                                   } else {
                                     // Remove just this month
                                     await removeMonthMutation.mutateAsync({
@@ -1551,98 +1640,124 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
                               } else {
                                 // ADDING: For fixed activations, must select ALL available months
                                 if (activation.activationType === "fixed") {
+                                  // For fixed activations, if already in proposal, remove it first then add all months
+                                  if (proposalActivation) {
+                                    await removeActivationMutation.mutateAsync(
+                                      activation.id,
+                                    );
+                                  }
+                                  // Add with ALL available months
                                   await addActivationMutation.mutateAsync({
                                     activationId: activation.id,
                                     selectedMonths: activation.availableMonths,
                                   });
                                 } else {
                                   // For variable activations, add just this month
-                                  await addActivationMutation.mutateAsync({
-                                    activationId: activation.id,
-                                    selectedMonths: [month],
-                                  });
+                                  // If activation exists, we're adding a new month to it
+                                  if (proposalActivation) {
+                                    // Add this month to existing selection
+                                    const newMonths = [
+                                      ...proposalActivation.selectedMonths,
+                                      month,
+                                    ];
+                                    await addActivationMutation.mutateAsync({
+                                      activationId: activation.id,
+                                      selectedMonths: newMonths,
+                                    });
+                                  } else {
+                                    // New activation, add just this month
+                                    await addActivationMutation.mutateAsync({
+                                      activationId: activation.id,
+                                      selectedMonths: [month],
+                                    });
+                                  }
                                 }
                               }
-                            } finally {
-                              setTogglingActivation(null);
-                            }
-                          };
+                            };
 
-                          return (
-                            <button
-                              key={activation.id}
-                              onClick={() => handleActivationClick(activation, month)}
-                              className={cn(
-                                "w-full text-left rounded-lg p-1 text-xs transition-all hover:shadow-md relative overflow-hidden flex items-center cursor-pointer border",
-                                // Visual distinction: selected = solid, not selected = faded
-                                isSelectedForThisMonth ? "" : "opacity-40"
-                              )}
-                              style={{
-                                backgroundColor: brand?.primaryColor
-                                  ? hexToRgba(
-                                      brand.primaryColor,
-                                      isSelectedForThisMonth ? 0.2 : 0.1
-                                    )
-                                  : "rgba(243, 244, 246, 1)",
-                                borderColor: brand?.primaryColor
-                                  ? hexToRgba(brand.primaryColor, 0.15)
-                                  : "rgba(200, 200, 200, 0.2)",
-                              }}
-                            >
-                              {/* Status Icon - Show in edit mode OR loading indicator */}
-                              {(isMonthInEditMode || isToggling) && (
-                                <button
-                                  onClick={handleQuickToggle}
-                                  className="absolute right-2 z-10 hover:scale-110 transition-transform"
-                                  disabled={!isEditable || isToggling}
-                                >
-                                  {isToggling ? (
-                                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                                  ) : isSelectedForThisMonth ? (
-                                    <XCircle className="h-4 w-4 text-[#DD3737]" />
-                                  ) : (
-                                    <CirclePlus className="h-4 w-4 text-[#32C266]" />
-                                  )}
-                                </button>
-                              )}
-
-                              {/* Content */}
-                              <div className="flex items-center gap-2 pr-6">
-                                {/* Brand Logo */}
-                                {brand?.logoUrl ? (
-                                  <img
-                                    src={brand.logoUrl}
-                                    alt={brand.name}
-                                    className="w-4 h-4 rounded-full object-cover flex-shrink-0"
-                                  />
-                                ) : (
-                                  <div
-                                    className="w-4 h-4 rounded-full flex-shrink-0 flex items-center justify-center text-white font-bold text-xs"
-                                    style={{
-                                      backgroundColor: brand?.primaryColor || "#6366f1",
-                                    }}
+                            return (
+                              <button
+                                key={activation.id}
+                                onClick={() =>
+                                  handleActivationClick(activation, month)
+                                }
+                                className={cn(
+                                  "w-full text-left rounded-lg p-1 text-xs transition-all hover:shadow-md relative overflow-hidden flex items-center cursor-pointer group",
+                                )}
+                                style={{
+                                  backgroundColor: brand?.primaryColor
+                                    ? hexToRgba(brand.primaryColor, 0.2)
+                                    : "rgba(243, 244, 246, 1)",
+                                }}
+                              >
+                                {/* Add/Remove Icon - Always visible on hover or when selected */}
+                                {isEditable && (
+                                  <button
+                                    onClick={handleQuickToggle}
+                                    className={cn(
+                                      "absolute right-1 z-10 hover:scale-110 transition-all",
+                                      isSelectedForThisMonth
+                                        ? "opacity-100"
+                                        : "opacity-0 group-hover:opacity-100",
+                                    )}
+                                    disabled={!isEditable}
                                   >
-                                    {brand?.name?.charAt(0) || "?"}
-                                  </div>
+                                    {isSelectedForThisMonth ? (
+                                      <X className="h-3.5 w-3.5 text-red-500 bg-white/90 rounded-full p-0.5" />
+                                    ) : (
+                                      <CirclePlus className="h-3.5 w-3.5 text-green-500 bg-white border-0 rounded-full " />
+                                    )}
+                                  </button>
                                 )}
 
-                                {/* Text Content */}
-                                <div className="flex-1 min-w-0">
-                                  <div
-                                    className="text-xs truncate font-medium"
-                                    style={{
-                                      color: brand?.primaryColor
-                                        ? brand.primaryColor
-                                        : "text-white",
-                                    }}
-                                  >
-                                    {activation.name}
+                                {/* Content */}
+                                <div className="flex items-center gap-1.5 pr-5">
+                                  {/* Fixed/Variable Icon */}
+                                  <div className="flex-shrink-0">
+                                    {activation.activationType === "fixed" ? (
+                                      <Lock className="h-3 w-3 text-muted-foreground/60" />
+                                    ) : (
+                                      <Shuffle className="h-3 w-3 text-muted-foreground/60" />
+                                    )}
+                                  </div>
+
+                                  {/* Brand Logo */}
+                                  {brand?.logoUrl ? (
+                                    <img
+                                      src={brand.logoUrl}
+                                      alt={brand.name}
+                                      className="w-4 h-4 rounded-full object-cover flex-shrink-0"
+                                    />
+                                  ) : (
+                                    <div
+                                      className="w-4 h-4 rounded-full flex-shrink-0 flex items-center justify-center text-white font-bold text-xs"
+                                      style={{
+                                        backgroundColor:
+                                          brand?.primaryColor || "#6366f1",
+                                      }}
+                                    >
+                                      {brand?.name?.charAt(0) || "?"}
+                                    </div>
+                                  )}
+
+                                  {/* Text Content */}
+                                  <div className="flex-1 min-w-0">
+                                    <div
+                                      className="text-xs truncate font-medium"
+                                      style={{
+                                        color: brand?.primaryColor
+                                          ? brand.primaryColor
+                                          : "text-white",
+                                      }}
+                                    >
+                                      {activation.name}
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
-                            </button>
-                          );
-                        })
+                              </button>
+                            );
+                          },
+                        )
                       )}
                     </div>
                   </div>
@@ -1682,7 +1797,9 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
             <div className="font-bold bg-proposaltwo text-white flex items-center justify-center rounded-2xl gap-x-2 ">
               <div className="w-2 h-2 rounded-full bg-[#32C266] shrink-0" />
               <div className="flex items-center gap-x-2">
-                <p className="text-2xl">{Math.round((activeMonthsCount / 12) * 100)}%</p>
+                <p className="text-2xl">
+                  {Math.round((activeMonthsCount / 12) * 100)}%
+                </p>
                 <span className="text-xs font-semibold block w-[60px] leading-tight">
                   Calendar Fill
                 </span>
@@ -1722,7 +1839,12 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
                   width="676"
                   height="52"
                 >
-                  <rect width="676" height="52" rx="11" fill="url(#paint0_linear_15210_13456)" />
+                  <rect
+                    width="676"
+                    height="52"
+                    rx="11"
+                    fill="url(#paint0_linear_15210_13456)"
+                  />
                 </mask>
                 <g mask="url(#mask0_15210_13456)">
                   <ellipse
@@ -1792,7 +1914,7 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
                   "flex-1 rounded-xl text-white h-full  flex flex-col justify-between bg-proposaltwo p-4",
                   parseFloat(proposal?.tradeDealValue || "0") > 0
                     ? "bg-proposaltwo "
-                    : "border-2 border-dashed border-muted-foreground/50"
+                    : "border-2 border-dashed border-muted-foreground/50",
                 )}
               >
                 {parseFloat(proposal?.tradeDealValue || "0") > 0 && (
@@ -1800,7 +1922,9 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
                 )}
                 {parseFloat(proposal?.tradeDealValue || "0") > 0 && (
                   <span className="font-bold text-right flex items-baseline justify-end mt-4">
-                    <p className="text-2xl">{formatCurrency(proposal.tradeDealValue, false)}</p>
+                    <p className="text-2xl">
+                      {formatCurrency(proposal.tradeDealValue, false)}
+                    </p>
                     <p className="text-xs">AED</p>
                   </span>
                 )}
@@ -1812,15 +1936,19 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
                   "flex-1 rounded-xl text-white h-full  flex flex-col justify-between bg-proposaltwo p-4",
                   parseFloat(proposal?.focValue || "0") > 0
                     ? "bg-proposaltwo "
-                    : "border-2 border-dashed border-muted-foreground/50"
+                    : "border-2 border-dashed border-muted-foreground/50",
                 )}
               >
                 {parseFloat(proposal?.focValue || "0") > 0 && (
-                  <span className={cn("text-xs font-medium")}>Additional FOC</span>
+                  <span className={cn("text-xs font-medium")}>
+                    Additional FOC
+                  </span>
                 )}
                 {parseFloat(proposal?.focValue || "0") > 0 && (
                   <span className="font-bold text-right flex items-baseline justify-end mt-4">
-                    <p className="text-2xl">{formatCurrency(proposal.focValue, false)}</p>
+                    <p className="text-2xl">
+                      {formatCurrency(proposal.focValue, false)}
+                    </p>
                     <p className="text-xs">AED</p>
                   </span>
                 )}
@@ -1832,7 +1960,7 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
                   "flex-1 rounded-xl text-white h-full  flex flex-col justify-between bg-proposaltwo p-4",
                   parseFloat(proposal?.creditNoteValue || "0") > 0
                     ? "bg-proposaltwo "
-                    : "border-2 border-dashed border-muted-foreground/50"
+                    : "border-2 border-dashed border-muted-foreground/50",
                 )}
               >
                 {parseFloat(proposal?.creditNoteValue || "0") > 0 && (
@@ -1840,7 +1968,9 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
                 )}
                 {parseFloat(proposal?.creditNoteValue || "0") > 0 && (
                   <span className=" font-bold text-right flex items-baseline justify-end mt-4">
-                    <p className="text-2xl">{formatCurrency(proposal.creditNoteValue, false)}</p>
+                    <p className="text-2xl">
+                      {formatCurrency(proposal.creditNoteValue, false)}
+                    </p>
                     <p className="text-xs">AED</p>
                   </span>
                 )}
@@ -1852,7 +1982,7 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
             <div
               className={cn(
                 "relative h-full  z-10 rounded-2xl overflow-hidden bg-gradient-to-b from-[#AB1A2D] via-[#E8374E] to-[#E43A50] flex flex-col justify-between",
-                selectedVenue?.boosterEligible && "h-32"
+                selectedVenue?.boosterEligible && "h-32",
               )}
             >
               <svg
@@ -1911,7 +2041,9 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
               </svg>
               <div className="flex flex-row h-full justify-between ">
                 <div className="relative z-10 text-white p-4">
-                  <p className=" font-bold text-xs mb-1">Total Partnership Value</p>
+                  <p className=" font-bold text-xs mb-1">
+                    Total Partnership Value
+                  </p>
                 </div>
                 <div className="flex relative z-10 flex-col justify-end  text-white px-4 pt-10">
                   {/* <div className="relative z-10 text-white text-right px-4"> */}
@@ -1925,86 +2057,87 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
             </div>
 
             {/* Booster Value - Only show if venue is booster eligible */}
-            {selectedVenue?.boosterEligible && parseFloat(proposal?.boosterValue || "0") > 0 && (
-              <div className="relative h-28 z-0 mt-[-72px] rounded-2xl overflow-hidden bg-[#4C4C4C] flex flex-col justify-between">
-                <svg
-                  className="absolute inset-0 w-full h-full"
-                  width="344"
-                  height="112"
-                  viewBox="0 0 344 112"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <mask
-                    id="mask0_40_15881"
-                    style={{ maskType: "alpha" }}
-                    maskUnits="userSpaceOnUse"
-                    x="0"
-                    y="0"
+            {selectedVenue?.boosterEligible &&
+              parseFloat(proposal?.boosterValue || "0") > 0 && (
+                <div className="relative h-28 z-0 mt-[-72px] rounded-2xl overflow-hidden bg-[#4C4C4C] flex flex-col justify-between">
+                  <svg
+                    className="absolute inset-0 w-full h-full"
                     width="344"
                     height="112"
+                    viewBox="0 0 344 112"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
                   >
-                    <rect
-                      x="344"
-                      y="112"
+                    <mask
+                      id="mask0_40_15881"
+                      style={{ maskType: "alpha" }}
+                      maskUnits="userSpaceOnUse"
+                      x="0"
+                      y="0"
                       width="344"
                       height="112"
-                      rx="16"
-                      transform="rotate(-180 344 112)"
-                      fill="url(#paint0_linear_40_15881)"
-                    />
-                  </mask>
-                  <g mask="url(#mask0_40_15881)">
-                    <ellipse
-                      opacity="0.8"
-                      cx="275.336"
-                      cy="-125"
-                      rx="221.802"
-                      ry="224"
-                      transform="rotate(-180 275.336 -125)"
-                      fill="#0E0E0E"
-                      fill-opacity="0.28"
-                    />
-                    <ellipse
-                      opacity="0.8"
-                      cx="66.1593"
-                      cy="181"
-                      rx="221.802"
-                      ry="224"
-                      transform="rotate(-180 66.1593 181)"
-                      fill="#0E0E0E"
-                      fill-opacity="0.28"
-                    />
-                  </g>
-                  <defs>
-                    <linearGradient
-                      id="paint0_linear_40_15881"
-                      x1="344"
-                      y1="117.163"
-                      x2="680.877"
-                      y2="229.739"
-                      gradientUnits="userSpaceOnUse"
                     >
-                      <stop stop-color="#4C4C4C" />
-                      <stop offset="1" stop-color="#303030" />
-                    </linearGradient>
-                  </defs>
-                </svg>
+                      <rect
+                        x="344"
+                        y="112"
+                        width="344"
+                        height="112"
+                        rx="16"
+                        transform="rotate(-180 344 112)"
+                        fill="url(#paint0_linear_40_15881)"
+                      />
+                    </mask>
+                    <g mask="url(#mask0_40_15881)">
+                      <ellipse
+                        opacity="0.8"
+                        cx="275.336"
+                        cy="-125"
+                        rx="221.802"
+                        ry="224"
+                        transform="rotate(-180 275.336 -125)"
+                        fill="#0E0E0E"
+                        fill-opacity="0.28"
+                      />
+                      <ellipse
+                        opacity="0.8"
+                        cx="66.1593"
+                        cy="181"
+                        rx="221.802"
+                        ry="224"
+                        transform="rotate(-180 66.1593 181)"
+                        fill="#0E0E0E"
+                        fill-opacity="0.28"
+                      />
+                    </g>
+                    <defs>
+                      <linearGradient
+                        id="paint0_linear_40_15881"
+                        x1="344"
+                        y1="117.163"
+                        x2="680.877"
+                        y2="229.739"
+                        gradientUnits="userSpaceOnUse"
+                      >
+                        <stop stop-color="#4C4C4C" />
+                        <stop offset="1" stop-color="#303030" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
 
-                <div className="flex relative z-10 items-center justify-between px-4 pt-6 pb-3 h-full mt-9">
-                  <div className="text-white  flex items-center gap-x-2  mt-4 mb-2  h-full">
-                    <Flame className="fill-primary stroke-none" />
-                    <p className="text-sm font-medium ">Booster Value</p>
-                  </div>
-                  <div className="relative flex z-10 text-white h-full mt-4 mb-2  items-center gap-x-1 text-right">
-                    <p className="text-2xl font-bold">
-                      {formatCurrency(proposal.boosterValue, false)}
-                    </p>
-                    <p className="text-sm font-bold">AED</p>
+                  <div className="flex relative z-10 items-center justify-between px-4 pt-6 pb-3 h-full mt-9">
+                    <div className="text-white  flex items-center gap-x-2  mt-4 mb-2  h-full">
+                      <Flame className="fill-primary stroke-none" />
+                      <p className="text-sm font-medium ">Booster Value</p>
+                    </div>
+                    <div className="relative flex z-10 text-white h-full mt-4 mb-2  items-center gap-x-1 text-right">
+                      <p className="text-2xl font-bold">
+                        {formatCurrency(proposal.boosterValue, false)}
+                      </p>
+                      <p className="text-sm font-bold">AED</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
           </div>
         </div>
       </section>
@@ -2012,7 +2145,11 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
       {/* Activation Selection Sheet */}
       <ActivationSelectionSheet
         activation={selectedActivation}
-        brand={selectedActivation ? getBrandForActivation(selectedActivation.brandId) : null}
+        brand={
+          selectedActivation
+            ? getBrandForActivation(selectedActivation.brandId)
+            : null
+        }
         existingSelection={existingProposalActivation}
         clickedMonth={selectedMonth}
         open={isActivationSheetOpen}
@@ -2051,8 +2188,8 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
           <DialogHeader>
             <DialogTitle>Reject Proposal</DialogTitle>
             <DialogDescription>
-              Please provide a reason for rejecting this proposal. This will be recorded for future
-              reference.
+              Please provide a reason for rejecting this proposal. This will be
+              recorded for future reference.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -2106,8 +2243,8 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
               {commercialToDelete?.type === "trade-deal"
                 ? "trade deal"
                 : commercialToDelete?.type === "foc"
-                ? "FOC"
-                : "credit note"}
+                  ? "FOC"
+                  : "credit note"}
               ? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
