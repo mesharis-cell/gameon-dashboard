@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { X, Upload, Plus, XCircle } from "lucide-react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 import { useUser } from "@/lib/hooks/use-user";
 import { usePermissions } from "@/lib/hooks/use-permissions";
@@ -88,6 +88,15 @@ export function VenueFormDialog({
   // Check if user can manage booster eligibility
   const canManageBooster = hasPermission("venue:manage:all");
 
+  // Fetch users list for admin assignment selector
+  const { data: usersResponse } = useQuery({
+    queryKey: ["users"],
+    queryFn: () => api.get("/api/users?limit=1000"),
+    enabled: canManageBooster && isEditing,
+  });
+
+  const users = (usersResponse as any)?.data || [];
+
   const [formData, setFormData] = useState({
     customerCode: venue?.customerCode || "",
     name: venue?.name || "",
@@ -138,7 +147,7 @@ export function VenueFormDialog({
 
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [mediaPreview, setMediaPreview] = useState<string>(
-    venue?.mediaUrl || ""
+    venue?.mediaUrl || "",
   );
   const [isUploading, setIsUploading] = useState(false);
 
@@ -317,16 +326,38 @@ export function VenueFormDialog({
               <Label htmlFor="assignedKAM">
                 Assigned KAM <span className="text-red-500">*</span>
               </Label>
-              <Input
-                id="assignedKAM"
-                value={
-                  isEditing && venue?.assignedUser?.email
-                    ? venue.assignedUser.email
-                    : user?.email || ""
-                }
-                readOnly
-                className="rounded-2xl"
-              />
+              {canManageBooster && isEditing ? (
+                // Admin editing: Show user selector to allow reassignment
+                <Select
+                  value={formData.assignedId || ""}
+                  onValueChange={(value) =>
+                    setFormData((prev) => ({ ...prev, assignedId: value }))
+                  }
+                >
+                  <SelectTrigger className="rounded-2xl">
+                    <SelectValue placeholder="Select user" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {users.map((u: any) => (
+                      <SelectItem key={u.id} value={u.id}>
+                        {u.name} ({u.email})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                // Regular user or creating: Show read-only email
+                <Input
+                  id="assignedKAM"
+                  value={
+                    isEditing && venue?.assignedUser?.email
+                      ? venue.assignedUser.email
+                      : user?.email || ""
+                  }
+                  readOnly
+                  className="rounded-2xl"
+                />
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="tier">Tier</Label>
