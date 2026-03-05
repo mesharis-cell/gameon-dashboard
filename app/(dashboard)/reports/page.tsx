@@ -3,13 +3,7 @@
 import { useState, useRef, useMemo, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -20,11 +14,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Table,
@@ -51,11 +41,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { XAxis, CartesianGrid, BarChart, Bar, AreaChart, Area } from "recharts";
 import {
   DollarSign,
@@ -140,9 +126,7 @@ export default function ReportsPage() {
   const queryClient = useQueryClient();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [proposalToDelete, setProposalToDelete] = useState<string | null>(null);
-  const [selectedProposalId, setSelectedProposalId] = useState<string | null>(
-    null
-  );
+  const [selectedProposalId, setSelectedProposalId] = useState<string | null>(null);
   const [isDetailSheetOpen, setIsDetailSheetOpen] = useState(false);
 
   // Header filters (for Summary, Charts, KAM Performance)
@@ -155,9 +139,7 @@ export default function ReportsPage() {
   const [headerBrandFilter, setHeaderBrandFilter] = useState("all");
 
   // Debounced filter values for API calls
-  const [debouncedStartDate, setDebouncedStartDate] = useState<
-    Date | undefined
-  >();
+  const [debouncedStartDate, setDebouncedStartDate] = useState<Date | undefined>();
   const [debouncedEndDate, setDebouncedEndDate] = useState<Date | undefined>();
   const [debouncedKamFilter, setDebouncedKamFilter] = useState("all");
   const [debouncedStatusFilter, setDebouncedStatusFilter] = useState("all");
@@ -180,11 +162,7 @@ export default function ReportsPage() {
   useEffect(() => {
     // Only debounce if both dates are selected AND they are different
     // (Calendar sets end date = start date initially, we want to wait for actual end date selection)
-    if (
-      customStartDate &&
-      customEndDate &&
-      customStartDate.getTime() !== customEndDate.getTime()
-    ) {
+    if (customStartDate && customEndDate && customStartDate.getTime() !== customEndDate.getTime()) {
       const timer = setTimeout(() => {
         setDebouncedStartDate(customStartDate);
         setDebouncedEndDate(customEndDate);
@@ -207,12 +185,7 @@ export default function ReportsPage() {
       setDebouncedBrandFilter(headerBrandFilter);
     }, 300);
     return () => clearTimeout(timer);
-  }, [
-    headerKamFilter,
-    headerStatusFilter,
-    headerTierFilter,
-    headerBrandFilter,
-  ]);
+  }, [headerKamFilter, headerStatusFilter, headerTierFilter, headerBrandFilter]);
 
   // Debounce search query (500ms delay)
   useEffect(() => {
@@ -234,32 +207,31 @@ export default function ReportsPage() {
 
   // Calculate date range with useMemo to prevent infinite re-renders
   // Comparison is ALWAYS current month vs previous month (ignores date range filter)
-  const { startDate, endDate, previousStartDate, previousEndDate } =
-    useMemo(() => {
-      const now = new Date();
-      const currentMonthStart = startOfMonth(now);
-      const currentMonthEnd = endOfMonth(now);
-      const previousMonth = subMonths(now, 1);
-      const previousMonthStart = startOfMonth(previousMonth);
-      const previousMonthEnd = endOfMonth(previousMonth);
+  const { startDate, endDate, previousStartDate, previousEndDate } = useMemo(() => {
+    const now = new Date();
+    const currentMonthStart = startOfMonth(now);
+    const currentMonthEnd = endOfMonth(now);
+    const previousMonth = subMonths(now, 1);
+    const previousMonthStart = startOfMonth(previousMonth);
+    const previousMonthEnd = endOfMonth(previousMonth);
 
-      // For current period: use custom date range if selected, otherwise use current month
-      const currentStart = debouncedStartDate
-        ? startOfDay(debouncedStartDate).toISOString()
-        : startOfDay(currentMonthStart).toISOString();
+    // For current period: use custom date range if selected, otherwise use current month
+    const currentStart = debouncedStartDate
+      ? startOfDay(debouncedStartDate).toISOString()
+      : startOfDay(currentMonthStart).toISOString();
 
-      const currentEnd = debouncedEndDate
-        ? endOfDay(debouncedEndDate).toISOString()
-        : endOfDay(currentMonthEnd).toISOString();
+    const currentEnd = debouncedEndDate
+      ? endOfDay(debouncedEndDate).toISOString()
+      : endOfDay(currentMonthEnd).toISOString();
 
-      // For comparison: ALWAYS use previous month (ignore date range filter)
-      return {
-        startDate: currentStart,
-        endDate: currentEnd,
-        previousStartDate: startOfDay(previousMonthStart).toISOString(),
-        previousEndDate: endOfDay(previousMonthEnd).toISOString(),
-      };
-    }, [debouncedStartDate, debouncedEndDate]);
+    // For comparison: ALWAYS use previous month (ignore date range filter)
+    return {
+      startDate: currentStart,
+      endDate: currentEnd,
+      previousStartDate: startOfDay(previousMonthStart).toISOString(),
+      previousEndDate: endOfDay(previousMonthEnd).toISOString(),
+    };
+  }, [debouncedStartDate, debouncedEndDate]);
 
   // Fetch summary statistics (with debounced header filters)
   const { data: summary, isLoading: summaryLoading } = useQuery<SummaryStats>({
@@ -315,18 +287,14 @@ export default function ReportsPage() {
           brandId: debouncedBrandFilter,
         }),
       });
-      const response: any = await api.get(
-        `/api/reports/proposals-by-month?${params}`
-      );
+      const response: any = await api.get(`/api/reports/proposals-by-month?${params}`);
       return response.data;
     },
     refetchInterval: 5 * 60 * 1000,
   });
 
   // Fetch brand activations (with debounced header filters)
-  const { data: brandActivations, isLoading: activationsLoading } = useQuery<
-    any[]
-  >({
+  const { data: brandActivations, isLoading: activationsLoading } = useQuery<any[]>({
     queryKey: [
       "reports-brand-activations",
       startDate,
@@ -349,9 +317,7 @@ export default function ReportsPage() {
           brandId: debouncedBrandFilter,
         }),
       });
-      const response: any = await api.get(
-        `/api/reports/brand-activations?${params}`
-      );
+      const response: any = await api.get(`/api/reports/brand-activations?${params}`);
       return response.data;
     },
     refetchInterval: 5 * 60 * 1000,
@@ -416,12 +382,11 @@ export default function ReportsPage() {
   });
 
   // Fetch full proposal details when a proposal is selected
-  const { data: selectedProposalResponse, isLoading: isProposalLoading } =
-    useQuery({
-      queryKey: ["proposal", selectedProposalId],
-      queryFn: () => api.get(`/api/proposals/${selectedProposalId}`),
-      enabled: !!selectedProposalId,
-    });
+  const { data: selectedProposalResponse, isLoading: isProposalLoading } = useQuery({
+    queryKey: ["proposal", selectedProposalId],
+    queryFn: () => api.get(`/api/proposals/${selectedProposalId}`),
+    enabled: !!selectedProposalId,
+  });
 
   const selectedProposal = (selectedProposalResponse as any)?.data;
 
@@ -684,9 +649,7 @@ export default function ReportsPage() {
   const formatRelativeTime = (date: string) => {
     const now = new Date();
     const updatedDate = new Date(date);
-    const diffInSeconds = Math.floor(
-      (now.getTime() - updatedDate.getTime()) / 1000
-    );
+    const diffInSeconds = Math.floor((now.getTime() - updatedDate.getTime()) / 1000);
 
     if (diffInSeconds < 60) {
       return "just now";
@@ -727,12 +690,8 @@ export default function ReportsPage() {
         {/* Header */}
         <div className="flex items-center justify-between gap-x-4">
           <div className="flex flex-col gap-y-1">
-            <h1 className="text-3xl font-bold tracking-tight">
-              Summary Statistics
-            </h1>
-            <p className="text-muted-foreground">
-              Track your team&apos;s performance and analysis
-            </p>
+            <h1 className="text-3xl font-bold tracking-tight">Summary Statistics</h1>
+            <p className="text-muted-foreground">Track your team&apos;s performance and analysis</p>
           </div>
           <div className="flex gap-2 justify-between">
             <div className="flex items-center gap-2 flex-wrap">
@@ -777,10 +736,7 @@ export default function ReportsPage() {
               </Popover>
 
               {/* KAM Filter */}
-              <Select
-                value={headerKamFilter}
-                onValueChange={setHeaderKamFilter}
-              >
+              <Select value={headerKamFilter} onValueChange={setHeaderKamFilter}>
                 <SelectTrigger className="w-[150px] rounded-xl">
                   <SelectValue placeholder="All KAMs" />
                 </SelectTrigger>
@@ -795,10 +751,7 @@ export default function ReportsPage() {
               </Select>
 
               {/* Status Filter */}
-              <Select
-                value={headerStatusFilter}
-                onValueChange={setHeaderStatusFilter}
-              >
+              <Select value={headerStatusFilter} onValueChange={setHeaderStatusFilter}>
                 <SelectTrigger className="w-[150px] rounded-xl">
                   <SelectValue placeholder="All Status" />
                 </SelectTrigger>
@@ -812,10 +765,7 @@ export default function ReportsPage() {
               </Select>
 
               {/* Tier Filter */}
-              <Select
-                value={headerTierFilter}
-                onValueChange={setHeaderTierFilter}
-              >
+              <Select value={headerTierFilter} onValueChange={setHeaderTierFilter}>
                 <SelectTrigger className="w-[130px] rounded-xl">
                   <SelectValue placeholder="All Tiers" />
                 </SelectTrigger>
@@ -828,10 +778,7 @@ export default function ReportsPage() {
               </Select>
 
               {/* Brand Filter */}
-              <Select
-                value={headerBrandFilter}
-                onValueChange={setHeaderBrandFilter}
-              >
+              <Select value={headerBrandFilter} onValueChange={setHeaderBrandFilter}>
                 <SelectTrigger className="w-[150px] rounded-xl">
                   <SelectValue placeholder="All Brands" />
                 </SelectTrigger>
@@ -845,11 +792,7 @@ export default function ReportsPage() {
                 </SelectContent>
               </Select>
 
-              <Button
-                variant="outline"
-                onClick={handleExport}
-                disabled={exportMutation.isPending}
-              >
+              <Button variant="outline" onClick={handleExport} disabled={exportMutation.isPending}>
                 {exportMutation.isPending ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
@@ -865,9 +808,7 @@ export default function ReportsPage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Avg. Value per Deal
-              </CardTitle>
+              <CardTitle className="text-sm font-medium">Avg. Value per Deal</CardTitle>
               <DollarSign className="bg-gradient-to-r from-[#3ED073] to-[#19A64D] size-8 text-white rounded-full px-2" />
             </CardHeader>
             <CardContent className="space-y-2">
@@ -889,9 +830,7 @@ export default function ReportsPage() {
                           <span
                             className="text-xs font-semibold px-1 py-0.5 rounded-lg flex items-center gap-1"
                             style={{
-                              backgroundColor: change.isPositive
-                                ? "#E1FCEF"
-                                : "#FFE7E8",
+                              backgroundColor: change.isPositive ? "#E1FCEF" : "#FFE7E8",
                               color: change.isPositive ? "#14804A" : "#F20004",
                               border: `1px solid ${change.isPositive ? "#14804A" : "#F20004"}`,
                             }}
@@ -903,9 +842,7 @@ export default function ReportsPage() {
                             )}
                             {change.percentage.toFixed(1)}% this month
                           </span>
-                          <span className="text-xs text-muted-foreground">
-                            vs last month
-                          </span>
+                          <span className="text-xs text-muted-foreground">vs last month</span>
                         </div>
                       );
                     })()}
@@ -916,9 +853,7 @@ export default function ReportsPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Avg. Brands per Deal
-              </CardTitle>
+              <CardTitle className="text-sm font-medium">Avg. Brands per Deal</CardTitle>
               <Package className="size-8 bg-gradient-to-r from-[#D2384C] to-[#E53950] text-white rounded-full px-2" />
             </CardHeader>
             <CardContent className="space-y-2">
@@ -940,9 +875,7 @@ export default function ReportsPage() {
                           <span
                             className="text-xs font-semibold px-1 py-0.5 rounded-lg flex items-center gap-1"
                             style={{
-                              backgroundColor: change.isPositive
-                                ? "#E1FCEF"
-                                : "#FFE7E8",
+                              backgroundColor: change.isPositive ? "#E1FCEF" : "#FFE7E8",
                               color: change.isPositive ? "#14804A" : "#F20004",
                               border: `1px solid ${change.isPositive ? "#14804A" : "#F20004"}`,
                             }}
@@ -954,9 +887,7 @@ export default function ReportsPage() {
                             )}
                             {change.percentage.toFixed(1)}% this month
                           </span>
-                          <span className="text-xs text-muted-foreground">
-                            vs last month
-                          </span>
+                          <span className="text-xs text-muted-foreground">vs last month</span>
                         </div>
                       );
                     })()}
@@ -967,9 +898,7 @@ export default function ReportsPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Conversion Rate
-              </CardTitle>
+              <CardTitle className="text-sm font-medium">Conversion Rate</CardTitle>
               <RefreshCw className="size-8 bg-gradient-to-r from-[#F88732] to-[#EB5D10]  text-white rounded-full px-2" />
             </CardHeader>
             <CardContent className="space-y-2">
@@ -991,9 +920,7 @@ export default function ReportsPage() {
                           <span
                             className="text-xs font-semibold px-1 py-0.5 rounded-lg flex items-center gap-1"
                             style={{
-                              backgroundColor: change.isPositive
-                                ? "#E1FCEF"
-                                : "#FFE7E8",
+                              backgroundColor: change.isPositive ? "#E1FCEF" : "#FFE7E8",
                               color: change.isPositive ? "#14804A" : "#F20004",
                               border: `1px solid ${change.isPositive ? "#14804A" : "#F20004"}`,
                             }}
@@ -1005,9 +932,7 @@ export default function ReportsPage() {
                             )}
                             {change.percentage.toFixed(1)}% this month
                           </span>
-                          <span className="text-xs text-muted-foreground">
-                            vs last month
-                          </span>
+                          <span className="text-xs text-muted-foreground">vs last month</span>
                         </div>
                       );
                     })()}
@@ -1018,9 +943,7 @@ export default function ReportsPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Total Pipeline
-              </CardTitle>
+              <CardTitle className="text-sm font-medium">Total Pipeline</CardTitle>
               <Database className="size-8 bg-[#538FFE] text-white rounded-full px-2" />
             </CardHeader>
             <CardContent className="space-y-2">
@@ -1042,9 +965,7 @@ export default function ReportsPage() {
                           <span
                             className="text-xs font-semibold px-1 py-0.5 rounded-lg flex items-center gap-1"
                             style={{
-                              backgroundColor: change.isPositive
-                                ? "#E1FCEF"
-                                : "#FFE7E8",
+                              backgroundColor: change.isPositive ? "#E1FCEF" : "#FFE7E8",
                               color: change.isPositive ? "#14804A" : "#F20004",
                               border: `1px solid ${change.isPositive ? "#14804A" : "#F20004"}`,
                             }}
@@ -1056,9 +977,7 @@ export default function ReportsPage() {
                             )}
                             {change.percentage.toFixed(1)}%
                           </span>
-                          <span className="text-xs text-muted-foreground">
-                            vs last month
-                          </span>
+                          <span className="text-xs text-muted-foreground">vs last month</span>
                         </div>
                       );
                     })()}
@@ -1077,9 +996,7 @@ export default function ReportsPage() {
                 Submitted Proposals by Months
                 {/* ({new Date().getFullYear()}) */}
               </CardTitle>
-              <CardDescription>
-                Monthly count of submitted proposals
-              </CardDescription>
+              <CardDescription>Monthly count of submitted proposals</CardDescription>
             </CardHeader>
             <CardContent>
               {monthlyLoading ? (
@@ -1105,36 +1022,14 @@ export default function ReportsPage() {
                     }}
                   >
                     <defs>
-                      <linearGradient
-                        id="colorSubmitted"
-                        x1="0"
-                        y1="0"
-                        x2="0"
-                        y2="1"
-                      >
-                        <stop
-                          offset="0%"
-                          stopColor="hsl(var(--chart-1))"
-                          stopOpacity={0.8}
-                        />
-                        <stop
-                          offset="100%"
-                          stopColor="hsl(var(--chart-2))"
-                          stopOpacity={0.1}
-                        />
+                      <linearGradient id="colorSubmitted" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="hsl(var(--chart-1))" stopOpacity={0.8} />
+                        <stop offset="100%" stopColor="hsl(var(--chart-2))" stopOpacity={0.1} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid vertical={false} />
-                    <XAxis
-                      dataKey="month"
-                      tickLine={false}
-                      axisLine={false}
-                      tickMargin={8}
-                    />
-                    <ChartTooltip
-                      cursor={false}
-                      content={<ChartTooltipContent />}
-                    />
+                    <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
+                    <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
                     <Area
                       dataKey="submitted"
                       type="bump"
@@ -1195,15 +1090,8 @@ export default function ReportsPage() {
                       tickMargin={10}
                       tickFormatter={(value) => value.slice(0, 8)}
                     />
-                    <ChartTooltip
-                      cursor={false}
-                      content={<ChartTooltipContent hideLabel />}
-                    />
-                    <Bar
-                      dataKey="proposalCount"
-                      fill="var(--color-proposalCount)"
-                      radius={8}
-                    />
+                    <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+                    <Bar dataKey="proposalCount" fill="var(--color-proposalCount)" radius={8} />
                   </BarChart>
                 </ChartContainer>
               ) : (
@@ -1223,16 +1111,10 @@ export default function ReportsPage() {
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="pipelineValue">
-                Pipeline Value (High to Low)
-              </SelectItem>
+              <SelectItem value="pipelineValue">Pipeline Value (High to Low)</SelectItem>
               <SelectItem value="winRate">Win Rate (High to Low)</SelectItem>
-              <SelectItem value="avgDealSize">
-                Avg Deal Size (High to Low)
-              </SelectItem>
-              <SelectItem value="totalProposals">
-                Total Proposals (Most to Least)
-              </SelectItem>
+              <SelectItem value="avgDealSize">Avg Deal Size (High to Low)</SelectItem>
+              <SelectItem value="totalProposals">Total Proposals (Most to Least)</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -1259,31 +1141,18 @@ export default function ReportsPage() {
                 <TableBody>
                   {kamPerformance.length === 0 ? (
                     <TableRow>
-                      <TableCell
-                        colSpan={5}
-                        className="text-center py-8 text-muted-foreground"
-                      >
+                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                         No KAM performance data available
                       </TableCell>
                     </TableRow>
                   ) : (
                     kamPerformance.map((kam: KamPerformance) => (
                       <TableRow key={kam.id}>
-                        <TableCell className="font-medium p-4">
-                          {kam.name}
-                        </TableCell>
-                        <TableCell className="p-4">
-                          {kam.totalProposals}
-                        </TableCell>
-                        <TableCell className="p-4">
-                          {formatCurrency(kam.pipelineValue)}
-                        </TableCell>
-                        <TableCell className="p-4">
-                          {kam.winRate.toFixed(1)}%
-                        </TableCell>
-                        <TableCell className="p-4">
-                          {formatCurrency(kam.avgDealSize)}
-                        </TableCell>
+                        <TableCell className="font-medium p-4">{kam.name}</TableCell>
+                        <TableCell className="p-4">{kam.totalProposals}</TableCell>
+                        <TableCell className="p-4">{formatCurrency(kam.pipelineValue)}</TableCell>
+                        <TableCell className="p-4">{kam.winRate.toFixed(1)}%</TableCell>
+                        <TableCell className="p-4">{formatCurrency(kam.avgDealSize)}</TableCell>
                       </TableRow>
                     ))
                   )}
@@ -1321,11 +1190,7 @@ export default function ReportsPage() {
         {/* All Proposals Section Header */}
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold tracking-tight">All Proposals</h2>
-          <Button
-            variant="outline"
-            onClick={handleExport}
-            disabled={exportMutation.isPending}
-          >
+          <Button variant="outline" onClick={handleExport} disabled={exportMutation.isPending}>
             {exportMutation.isPending ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
@@ -1362,10 +1227,7 @@ export default function ReportsPage() {
                 </Select>
               </div>
               <div className="w-40">
-                <Select
-                  value={dateRangeFilter}
-                  onValueChange={setDateRangeFilter}
-                >
+                <Select value={dateRangeFilter} onValueChange={setDateRangeFilter}>
                   <SelectTrigger className="rounded-full w-full">
                     <SelectValue placeholder="Date Range" />
                   </SelectTrigger>
@@ -1435,10 +1297,7 @@ export default function ReportsPage() {
                 ))
               ) : proposals.length === 0 ? (
                 <TableRow>
-                  <TableCell
-                    colSpan={7}
-                    className="text-center py-8 text-muted-foreground"
-                  >
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                     No proposals found
                   </TableCell>
                 </TableRow>
@@ -1453,9 +1312,7 @@ export default function ReportsPage() {
                       <div className="font-medium">{proposal.name}</div>
                     </TableCell>
                     <TableCell className="p-4">
-                      <div className="text-sm">
-                        {proposal.venueName || "No venue"}
-                      </div>
+                      <div className="text-sm">{proposal.venueName || "No venue"}</div>
                     </TableCell>
                     <TableCell className="p-4">
                       {proposal.venueTier ? (
@@ -1502,13 +1359,7 @@ export default function ReportsPage() {
                         }}
                       >
                         <Dot />
-                        <p>
-                          {
-                            STATUS_LABELS[
-                              proposal.status as keyof typeof STATUS_LABELS
-                            ]
-                          }
-                        </p>
+                        <p>{STATUS_LABELS[proposal.status as keyof typeof STATUS_LABELS]}</p>
                       </Badge>
                     </TableCell>
                     <TableCell className="p-4">
@@ -1522,29 +1373,18 @@ export default function ReportsPage() {
                           {formatRelativeTime(proposal.updatedAt)}
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          {new Date(proposal.updatedAt).toLocaleDateString(
-                            "en-US",
-                            {
-                              month: "short",
-                              day: "numeric",
-                              year: "numeric",
-                            }
-                          )}
+                          {new Date(proposal.updatedAt).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })}
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Can
-                        permission={[
-                          "proposal:manage:own",
-                          "proposal:admin:all",
-                        ]}
-                      >
+                      <Can permission={["proposal:manage:own", "proposal:admin:all"]}>
                         <DropdownMenu>
-                          <DropdownMenuTrigger
-                            asChild
-                            onClick={(e) => e.stopPropagation()}
-                          >
+                          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                             <Button variant="ghost" size="icon">
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
@@ -1559,9 +1399,7 @@ export default function ReportsPage() {
                               <Edit className="mr-2 h-4 w-4" />
                               Edit
                             </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={(e) => handleDuplicate(proposal.id, e)}
-                            >
+                            <DropdownMenuItem onClick={(e) => handleDuplicate(proposal.id, e)}>
                               <Copy className="mr-2 h-4 w-4" />
                               Duplicate
                             </DropdownMenuItem>
@@ -1589,9 +1427,7 @@ export default function ReportsPage() {
         {proposalsPagination && (
           <div className="flex items-center justify-between">
             <div className="text-sm text-muted-foreground">
-              Showing{" "}
-              {(proposalsPagination.page - 1) * proposalsPagination.limit + 1}{" "}
-              to{" "}
+              Showing {(proposalsPagination.page - 1) * proposalsPagination.limit + 1} to{" "}
               {Math.min(
                 proposalsPagination.page * proposalsPagination.limit,
                 proposalsPagination.total
@@ -1625,8 +1461,7 @@ export default function ReportsPage() {
             <AlertDialogHeader>
               <AlertDialogTitle>Delete Proposal</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to delete this proposal? This action
-                cannot be undone.
+                Are you sure you want to delete this proposal? This action cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

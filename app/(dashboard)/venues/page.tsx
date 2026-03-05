@@ -281,11 +281,7 @@ export default function VenuesPage() {
           <p className="text-muted-foreground">Explore or add Venues</p>
         </div>
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={handleExport}
-            disabled={exportMutation.isPending}
-          >
+          <Button variant="outline" onClick={handleExport} disabled={exportMutation.isPending}>
             {exportMutation.isPending ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
@@ -368,10 +364,7 @@ export default function VenuesPage() {
               ))
             ) : venues.length === 0 ? (
               <TableRow>
-                <TableCell
-                  colSpan={5}
-                  className="text-center py-8 text-muted-foreground"
-                >
+                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                   No venues found
                 </TableCell>
               </TableRow>
@@ -386,9 +379,7 @@ export default function VenuesPage() {
                     <div className="font-medium">{venue.name}</div>
                   </TableCell>
                   <TableCell className="p-4">
-                    <Badge
-                      className={`${tierColors[venue.tier]} font-normal capitalize`}
-                    >
+                    <Badge className={`${tierColors[venue.tier]} font-normal capitalize`}>
                       {venue.tier}
                     </Badge>
                   </TableCell>
@@ -399,9 +390,7 @@ export default function VenuesPage() {
                         <span className="text-muted-foreground">Eligible</span>
                       </div>
                     ) : (
-                      <span className="text-xs text-muted-foreground">
-                        Not eligible
-                      </span>
+                      <span className="text-xs text-muted-foreground">Not eligible</span>
                     )}
                   </TableCell>
                   <TableCell className="p-4">
@@ -418,11 +407,7 @@ export default function VenuesPage() {
                         onClick={(e) => e.stopPropagation()}
                         disabled={!canEditVenue(venue)}
                       >
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          disabled={!canEditVenue(venue)}
-                        >
+                        <Button variant="ghost" size="icon" disabled={!canEditVenue(venue)}>
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
@@ -451,9 +436,7 @@ export default function VenuesPage() {
       </div>
 
       {/* Pagination */}
-      {pagination && (
-        <Pagination pagination={pagination} onPageChange={handlePageChange} />
-      )}
+      {pagination && <Pagination pagination={pagination} onPageChange={handlePageChange} />}
 
       {/* Detail Sheet */}
       <VenueDetailSheet
@@ -488,14 +471,11 @@ export default function VenuesPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Venue</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this venue? This action cannot be
-              undone.
+              Are you sure you want to delete this venue? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setVenueToDelete(null)}>
-              Cancel
-            </AlertDialogCancel>
+            <AlertDialogCancel onClick={() => setVenueToDelete(null)}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"

@@ -23,11 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -105,17 +101,12 @@ const currentYear = new Date().getFullYear();
 export default function ActivationsPage() {
   const queryClient = useQueryClient();
   const { hasPermission } = usePermissions();
-  const [selectedActivation, setSelectedActivation] =
-    useState<Activation | null>(null);
+  const [selectedActivation, setSelectedActivation] = useState<Activation | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [editingActivation, setEditingActivation] = useState<Activation | null>(
-    null
-  );
+  const [editingActivation, setEditingActivation] = useState<Activation | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [activationToDelete, setActivationToDelete] = useState<string | null>(
-    null
-  );
+  const [activationToDelete, setActivationToDelete] = useState<string | null>(null);
 
   // Filters and pagination
   const [page, setPage] = useState(1);
@@ -129,17 +120,8 @@ export default function ActivationsPage() {
     setPage(1);
   }, [brandFilter, typeFilter, monthFilter, yearFilter]);
 
-  const { data: activationsResponse, isLoading } = useQuery<
-    ApiResponse<Activation[]>
-  >({
-    queryKey: [
-      "activations",
-      page,
-      brandFilter,
-      typeFilter,
-      monthFilter,
-      yearFilter,
-    ],
+  const { data: activationsResponse, isLoading } = useQuery<ApiResponse<Activation[]>>({
+    queryKey: ["activations", page, brandFilter, typeFilter, monthFilter, yearFilter],
     queryFn: () => {
       const params = new URLSearchParams({
         page: page.toString(),
@@ -171,9 +153,7 @@ export default function ActivationsPage() {
   // Combine existing years with future years (current + next 4 years)
   const existingYears = yearsResponse?.data || [];
   const futureYears = Array.from({ length: 5 }, (_, i) => currentYear + i);
-  const allYears = Array.from(new Set([...existingYears, ...futureYears])).sort(
-    (a, b) => a - b
-  ); // Sort descending (newest first)
+  const allYears = Array.from(new Set([...existingYears, ...futureYears])).sort((a, b) => a - b); // Sort descending (newest first)
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => api.delete(`/api/activations/${id}`),
@@ -305,19 +285,11 @@ export default function ActivationsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Activation Explorer
-          </h1>
-          <p className="text-muted-foreground">
-            Track all available activities
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight">Activation Explorer</h1>
+          <p className="text-muted-foreground">Track all available activities</p>
         </div>
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={handleExport}
-            disabled={exportMutation.isPending}
-          >
+          <Button variant="outline" onClick={handleExport} disabled={exportMutation.isPending}>
             {exportMutation.isPending ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
@@ -445,10 +417,7 @@ export default function ActivationsPage() {
               ))
             ) : activations.length === 0 ? (
               <TableRow>
-                <TableCell
-                  colSpan={6}
-                  className="text-center py-8 text-muted-foreground"
-                >
+                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                   No activations found
                 </TableCell>
               </TableRow>
@@ -459,22 +428,17 @@ export default function ActivationsPage() {
                   className="cursor-pointer hover:bg-muted/50"
                   onClick={() => handleRowClick(activation)}
                 >
-                  <TableCell className="font-medium p-4">
-                    {activation.name}
-                  </TableCell>
+                  <TableCell className="font-medium p-4">{activation.name}</TableCell>
                   <TableCell className="p-4">
                     <Badge
                       variant="secondary"
                       className="font-normal rounded-full flex items-center gap-2 pl-0.5 pr-2 w-fit"
                       style={{
                         backgroundColor: hexToRgba(
-                          getBrand(activation.brandId)?.primaryColor ||
-                            "#6366f1",
+                          getBrand(activation.brandId)?.primaryColor || "#6366f1",
                           0.2
                         ),
-                        color:
-                          getBrand(activation.brandId)?.primaryColor ||
-                          "#6366f1",
+                        color: getBrand(activation.brandId)?.primaryColor || "#6366f1",
                       }}
                     >
                       <Avatar className="h-4 w-4 border border-white/20">
@@ -486,8 +450,7 @@ export default function ActivationsPage() {
                           className="text-xs font-bold"
                           style={{
                             backgroundColor:
-                              getBrand(activation.brandId)?.primaryColor ||
-                              "#6366f1",
+                              getBrand(activation.brandId)?.primaryColor || "#6366f1",
                             color: "white",
                           }}
                         >
@@ -519,23 +482,18 @@ export default function ActivationsPage() {
                   </TableCell>
                   <TableCell className="p-4">
                     <div>
-                      <div className="font-medium">
-                        {activation.totalValue} AED
-                      </div>
+                      <div className="font-medium">{activation.totalValue} AED</div>
                       <div className="text-xs text-muted-foreground">
                         {activation.availableMonths.length} months
                       </div>
                     </div>
                   </TableCell>
                   <TableCell className="p-4">
-                    {new Date(activation.createdAt).toLocaleDateString(
-                      "en-US",
-                      {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      }
-                    )}
+                    {new Date(activation.createdAt).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>
@@ -554,9 +512,7 @@ export default function ActivationsPage() {
                       </DropdownMenuTrigger>
                       {hasPermission("activation:manage:all") && (
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={(e) => handleEdit(activation, e)}
-                          >
+                          <DropdownMenuItem onClick={(e) => handleEdit(activation, e)}>
                             <Edit className="mr-2 h-4 w-4" />
                             Edit
                           </DropdownMenuItem>
@@ -579,9 +535,7 @@ export default function ActivationsPage() {
       </div>
 
       {/* Pagination */}
-      {pagination && (
-        <Pagination pagination={pagination} onPageChange={handlePageChange} />
-      )}
+      {pagination && <Pagination pagination={pagination} onPageChange={handlePageChange} />}
 
       {/* Detail Sheet */}
       <ActivationDetailSheet
@@ -610,8 +564,7 @@ export default function ActivationsPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Activation</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this activation? This action
-              cannot be undone.
+              Are you sure you want to delete this activation? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

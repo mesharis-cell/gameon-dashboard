@@ -13,14 +13,10 @@ export const queryClient = new QueryClient({
   },
 });
 
-export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
 // API client helper with proper error handling
-export async function apiClient<T>(
-  endpoint: string,
-  options?: RequestInit
-): Promise<T> {
+export async function apiClient<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
 
   try {
@@ -59,12 +55,7 @@ export const api = {
     apiClient<T>(endpoint, {
       ...options,
       method: "POST",
-      body:
-        data instanceof FormData
-          ? data
-          : data
-            ? JSON.stringify(data)
-            : undefined,
+      body: data instanceof FormData ? data : data ? JSON.stringify(data) : undefined,
     }),
 
   put: <T>(endpoint: string, data?: unknown, options?: RequestInit) =>
