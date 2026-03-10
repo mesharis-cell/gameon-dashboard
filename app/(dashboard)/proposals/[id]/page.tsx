@@ -3,7 +3,7 @@
 import { use, useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/lib/api/client";
+import { api, ApiError } from "@/lib/api/client";
 import { usePermissions } from "@/lib/hooks/use-permissions";
 import { useUser } from "@/lib/hooks/use-user";
 import { Button } from "@/components/ui/button";
@@ -69,7 +69,13 @@ import { ActivationSelectionSheet } from "../components/activation-selection-she
 import { VenueFormDialog } from "../../venues/components/venue-form-dialog";
 import { CommercialModal } from "@/components/features/proposals/commercial-modal";
 import { cn } from "@/lib/utils";
-import type { Proposal, UpdateProposalData, Activation, Brand } from "@/lib/types/proposals";
+import type {
+  Proposal,
+  UpdateProposalData,
+  Activation,
+  ActivationOption,
+  Brand,
+} from "@/lib/types/proposals";
 import { MONTH_NAMES } from "@/lib/types/proposals";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -99,6 +105,7 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
 
   const [isEditingName, setIsEditingName] = useState(false);
   const [selectedActivation, setSelectedActivation] = useState<Activation | null>(null);
+  const [selectedActivationOption, setSelectedActivationOption] = useState<ActivationOption | null>(null);
   const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
   const [isActivationSheetOpen, setIsActivationSheetOpen] = useState(false);
   const [isVenueDialogOpen, setIsVenueDialogOpen] = useState(false);
@@ -149,10 +156,11 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
     queryFn: () => api.get("/api/venues?limit=1000"),
   });
 
-  // Fetch all activations
-  const { data: activationsResponse } = useQuery({
-    queryKey: ["activations"],
-    queryFn: () => api.get("/api/activations?limit=1000"),
+  // Fetch proposal-context activation options
+  const { data: activationOptionsResponse } = useQuery({
+    queryKey: ["proposal-activation-options", id],
+    queryFn: () => api.get(`/api/proposals/${id}/activation-options`),
+    enabled: !!id,
   });
 
   // Fetch brands
@@ -163,7 +171,7 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
 
   const proposal: Proposal | undefined = (proposalResponse as any)?.data;
   const venues: Venue[] = (venuesResponse as any)?.data || [];
-  const activations: Activation[] = (activationsResponse as any)?.data || [];
+  const activationOptions: ActivationOption[] = (activationOptionsResponse as any)?.data || [];
   const brands: Brand[] = (brandsResponse as any)?.data || [];
 
   // Local state for editable fields
@@ -287,7 +295,7 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
         formData.brandIds &&
         formData.brandIds.length > 0 &&
         proposal &&
-        activations.length > 0 &&
+        activationOptions.length > 0 &&
         proposal.status === "draft" &&
         !isAutoAddingActivations
       ) {
@@ -310,19 +318,19 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
         setIsAutoAddingActivations(true);
 
         try {
-          // Get all activations that match the NEW brands and year
-          const visibleActivations = activations.filter(
+          // Use backend eligibility metadata and only auto-add selectable activations
+          const selectableOptions = activationOptions.filter(
             (activation) =>
-              activation.year === formData.year &&
+              activation.selectable &&
               newBrands.includes(activation.brandId) &&
-              activation.status === "published" &&
-              activation.active
+              activation.year === formData.year
           );
 
           // Filter out activations that are already in the proposal
-          const activationsToAdd = visibleActivations.filter(
+          const activationsToAdd = selectableOptions.filter(
             (activation) => !proposal.activations?.some((pa) => pa.activation.id === activation.id)
           );
+          const skippedCount = Math.max(selectableOptions.length - activationsToAdd.length, 0);
 
           if (activationsToAdd.length > 0) {
             // Prepare bulk data - all activations with ALL their available months
@@ -339,10 +347,12 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
 
             // Show success toast with count
             toast.success(
-              `${response.data?.added || activationsToAdd.length} activation${
-                (response.data?.added || activationsToAdd.length) > 1 ? "s" : ""
-              } added automatically`
+              `${response.data?.added || activationsToAdd.length} added, ${
+                (response.data?.skipped || 0) + skippedCount
+              } skipped`
             );
+          } else if (selectableOptions.length > 0) {
+            toast.info(`${selectableOptions.length} activation options were already selected`);
           }
         } catch (error) {
           console.error("Failed to auto-add activations:", error);
@@ -358,7 +368,7 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
     formData.venueId,
     formData.brandIds,
     formData.year,
-    activations,
+    activationOptions,
     proposal?.activations,
     processedBrandIds,
     isAutoAddingActivations,
@@ -369,6 +379,7 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
     mutationFn: (data: UpdateProposalData) => api.patch(`/api/proposals/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["proposal", id] });
+      queryClient.invalidateQueries({ queryKey: ["proposal-activation-options", id] });
       setLastSaved(new Date());
     },
   });
@@ -379,6 +390,7 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
       api.post(`/api/proposals/${id}/activations`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["proposal", id] });
+      queryClient.invalidateQueries({ queryKey: ["proposal-activation-options", id] });
       toast.success("Activation added successfully");
     },
     onError: (error: Error) => {
@@ -393,6 +405,7 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
     onSuccess: async () => {
       // Invalidate and refetch to ensure UI updates immediately
       await queryClient.invalidateQueries({ queryKey: ["proposal", id] });
+      await queryClient.invalidateQueries({ queryKey: ["proposal-activation-options", id] });
       await queryClient.refetchQueries({ queryKey: ["proposal", id] });
     },
     onError: (error: Error) => {
@@ -408,6 +421,7 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["proposal", id] });
+      queryClient.invalidateQueries({ queryKey: ["proposal-activation-options", id] });
     },
     onError: (error: Error) => {
       toast.error(error.message || "Failed to remove activations");
@@ -420,6 +434,7 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
       api.delete(`/api/proposals/${id}/activations/${activationId}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["proposal", id] });
+      queryClient.invalidateQueries({ queryKey: ["proposal-activation-options", id] });
       toast.success("Activation removed successfully");
     },
     onError: (error: Error) => {
@@ -435,6 +450,7 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["proposal", id] });
+      queryClient.invalidateQueries({ queryKey: ["proposal-activation-options", id] });
       toast.success("Month removed successfully");
     },
     onError: (error: Error) => {
@@ -485,6 +501,33 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
       router.push("/proposals");
     },
     onError: (error: Error) => {
+      if (error instanceof ApiError && error.status === 409) {
+        const deadlineBlocked = error.details?.deadlineBlocked || [];
+        const soldOut = error.details?.soldOut || [];
+        const parts: string[] = [];
+
+        if (deadlineBlocked.length > 0) {
+          parts.push(
+            `Deadline passed: ${deadlineBlocked
+              .slice(0, 3)
+              .map((item: any) => item.activationName)
+              .join(", ")}`
+          );
+        }
+
+        if (soldOut.length > 0) {
+          parts.push(
+            `Sold out: ${soldOut
+              .slice(0, 3)
+              .map((item: any) => item.activationName)
+              .join(", ")}`
+          );
+        }
+
+        toast.error(parts.join(" | ") || "Proposal contains blocked activations");
+        return;
+      }
+
       toast.error(error.message || "Failed to submit proposal");
     },
   });
@@ -649,12 +692,26 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
 
   const handleActivationClick = (activation: Activation, month: number) => {
     setSelectedActivation(activation);
+    setSelectedActivationOption(getActivationOption(activation.id));
     setSelectedMonth(month);
     setIsActivationSheetOpen(true);
   };
 
   const handleAddActivation = (data: { selectedMonths: number[] }) => {
     if (!selectedActivation) return;
+
+    if (!selectedActivationOption || !selectedActivationOption.selectable) {
+      if (selectedActivationOption?.deadlinePassed) {
+        toast.error("This activation deadline has passed");
+        return;
+      }
+      if (selectedActivationOption?.soldOut) {
+        toast.error("This activation is sold out");
+        return;
+      }
+      toast.error("This activation is not selectable for this proposal");
+      return;
+    }
 
     // Backend will calculate the value automatically
     addActivationMutation.mutate({
@@ -772,20 +829,25 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
     return brands.find((b) => b.id === brandId);
   };
 
-  // Filter activations by selected brands and year
-  const filteredActivations = activations.filter(
-    (activation) =>
-      activation.year === (formData.year || proposal?.year) &&
-      (formData.brandIds || []).includes(activation.brandId) &&
-      activation.status === "published" &&
-      activation.active
+  const activationOptionsMap = useMemo(
+    () => new Map(activationOptions.map((activation) => [activation.id, activation])),
+    [activationOptions]
   );
+
+  // Keep selected draft activations visible even if currently not selectable
+  const calendarActivations = useMemo(() => {
+    const selectedOnlyActivations = (proposal?.activations || [])
+      .map((proposalActivation) => proposalActivation.activation)
+      .filter((activation) => !activationOptionsMap.has(activation.id));
+
+    return [...activationOptions, ...selectedOnlyActivations];
+  }, [activationOptions, proposal?.activations, activationOptionsMap]);
 
   // Create a stable global order for ALL activations to maintain consistent row positioning
   const sortedAllActivations = useMemo(() => {
     // Group activations by brand and calculate max frequency per brand
     const brandMaxFrequency = new Map<string, number>();
-    filteredActivations.forEach((activation) => {
+    calendarActivations.forEach((activation) => {
       const currentMax = brandMaxFrequency.get(activation.brandId) || 0;
       brandMaxFrequency.set(
         activation.brandId,
@@ -794,7 +856,7 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
     });
 
     // Sort all activations by: brand max frequency → brand name → activation frequency → activation name
-    return [...filteredActivations].sort((a, b) => {
+    return [...calendarActivations].sort((a, b) => {
       // First sort by brand's maximum activation frequency - DESCENDING (highest first)
       const maxFreqA = brandMaxFrequency.get(a.brandId) || 0;
       const maxFreqB = brandMaxFrequency.get(b.brandId) || 0;
@@ -825,7 +887,7 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
       // If same frequency, sort by activation name
       return a.name.localeCompare(b.name);
     });
-  }, [filteredActivations]);
+  }, [calendarActivations]);
 
   // Get activations for a specific month - returns ALL activations in global order
   // with a flag indicating if each is available for this month
@@ -839,6 +901,10 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
   // Check if activation is in proposal
   const getProposalActivation = (activationId: string) => {
     return proposal?.activations?.find((pa) => pa.activation.id === activationId);
+  };
+
+  const getActivationOption = (activationId: string) => {
+    return activationOptionsMap.get(activationId) || null;
   };
 
   const formatCurrency = (value: string | number, withCurrency = true) => {
@@ -1514,10 +1580,12 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
                           }
 
                           const proposalActivation = getProposalActivation(activation.id);
+                          const activationOption = getActivationOption(activation.id);
                           const brand = getBrandForActivation(activation.brandId);
                           // Check if this specific month is selected in the proposal
                           const isSelectedForThisMonth =
                             proposalActivation?.selectedMonths.includes(month) || false;
+                          const isSelectableForAdd = activationOption?.selectable ?? false;
 
                           const toggleKey = `${activation.id}-${month}`;
                           const isToggling = togglingActivation === toggleKey;
@@ -1549,6 +1617,11 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
                                   }
                                 }
                               } else {
+                                if (!isSelectableForAdd) {
+                                  toast.error("Activation is not selectable for this proposal");
+                                  return;
+                                }
+
                                 // ADDING: For fixed activations, must select ALL available months
                                 if (activation.activationType === "fixed") {
                                   await addActivationMutation.mutateAsync({
@@ -1575,7 +1648,7 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
                               className={cn(
                                 "w-full text-left rounded-lg p-1 text-xs transition-all hover:shadow-md relative overflow-hidden flex items-center cursor-pointer border",
                                 // Visual distinction: selected = solid, not selected = faded
-                                isSelectedForThisMonth ? "" : "opacity-40"
+                                isSelectedForThisMonth || isSelectableForAdd ? "" : "opacity-40"
                               )}
                               style={{
                                 backgroundColor: brand?.primaryColor
@@ -1594,7 +1667,7 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
                                 <button
                                   onClick={handleQuickToggle}
                                   className="absolute right-2 z-10 hover:scale-110 transition-transform"
-                                  disabled={!isEditable || isToggling}
+                                  disabled={!isEditable || isToggling || (!isSelectedForThisMonth && !isSelectableForAdd)}
                                 >
                                   {isToggling ? (
                                     <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
@@ -1638,6 +1711,31 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
                                   >
                                     {activation.name}
                                   </div>
+                                  {!isSelectedForThisMonth && !isSelectableForAdd && (
+                                    <div className="text-[10px] text-red-600 truncate">
+                                      {activationOption?.deadlinePassed
+                                        ? "Deadline passed"
+                                        : activationOption?.soldOut
+                                        ? "Sold out"
+                                        : "Unavailable"}
+                                    </div>
+                                  )}
+                                  {!isSelectedForThisMonth && isSelectableForAdd && activationOption && (
+                                    <div className="text-[10px] text-muted-foreground truncate">
+                                      {activationOption.kitsRemaining !== null &&
+                                      activationOption.kitsRemaining !== undefined
+                                        ? `${activationOption.kitsRemaining} kits left`
+                                        : "Unlimited"}
+                                      {activation.submissionDeadline
+                                        ? ` • by ${new Date(
+                                            `${activation.submissionDeadline}T00:00:00`
+                                          ).toLocaleDateString("en-US", {
+                                            month: "short",
+                                            day: "numeric",
+                                          })}`
+                                        : ""}
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             </button>
@@ -2012,11 +2110,17 @@ export default function ProposalEditorPage({ params }: ProposalEditorPageProps) 
       {/* Activation Selection Sheet */}
       <ActivationSelectionSheet
         activation={selectedActivation}
+        optionMeta={selectedActivationOption}
         brand={selectedActivation ? getBrandForActivation(selectedActivation.brandId) : null}
         existingSelection={existingProposalActivation}
         clickedMonth={selectedMonth}
         open={isActivationSheetOpen}
-        onOpenChange={setIsActivationSheetOpen}
+        onOpenChange={(open) => {
+          setIsActivationSheetOpen(open);
+          if (!open) {
+            setSelectedActivationOption(null);
+          }
+        }}
         onAdd={handleAddActivation}
         onRemove={handleRemoveActivation}
         isEditable={isEditable}

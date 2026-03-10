@@ -3,7 +3,7 @@
 import { use, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/lib/api/client";
+import { api, ApiError } from "@/lib/api/client";
 import { usePermissions } from "@/lib/hooks/use-permissions";
 import { useUser } from "@/lib/hooks/use-user";
 import { Button } from "@/components/ui/button";
@@ -140,6 +140,33 @@ export default function ReviewPage({ params }: ReviewPageProps) {
       router.push("/proposals");
     },
     onError: (error: Error) => {
+      if (error instanceof ApiError && error.status === 409) {
+        const deadlineBlocked = error.details?.deadlineBlocked || [];
+        const soldOut = error.details?.soldOut || [];
+        const parts: string[] = [];
+
+        if (deadlineBlocked.length > 0) {
+          parts.push(
+            `Deadline passed: ${deadlineBlocked
+              .slice(0, 3)
+              .map((item: any) => item.activationName)
+              .join(", ")}`
+          );
+        }
+
+        if (soldOut.length > 0) {
+          parts.push(
+            `Sold out: ${soldOut
+              .slice(0, 3)
+              .map((item: any) => item.activationName)
+              .join(", ")}`
+          );
+        }
+
+        toast.error(parts.join(" | ") || "Proposal contains blocked activations");
+        return;
+      }
+
       toast.error(error.message || "Failed to submit proposal");
     },
   });

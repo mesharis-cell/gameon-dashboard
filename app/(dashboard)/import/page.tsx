@@ -1,13 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -83,10 +77,7 @@ export default function ImportPage() {
       const formData = new FormData();
       formData.append("file", data.file);
 
-      const response: any = await api.post(
-        `/api/import/${data.type}`,
-        formData
-      );
+      const response: any = await api.post(`/api/import/${data.type}`, formData);
       return response.data as ImportResult;
     },
     onSuccess: async (data) => {
@@ -96,16 +87,12 @@ export default function ImportPage() {
       // Clear file after successful import
       if (data.success) {
         setFile(null);
-        const fileInput = document.getElementById(
-          "file-upload"
-        ) as HTMLInputElement;
+        const fileInput = document.getElementById("file-upload") as HTMLInputElement;
         if (fileInput) fileInput.value = "";
         toast.success(`Successfully imported ${data.imported} ${importType}`);
       } else if (data.imported > 0) {
         // Partial import - auto-download error report
-        toast.warning(
-          `Partial import: ${data.imported} succeeded, ${data.failed} failed`
-        );
+        toast.warning(`Partial import: ${data.imported} succeeded, ${data.failed} failed`);
         await downloadErrorReport(data.jobId);
       } else {
         // Failed import - auto-download error report
@@ -171,10 +158,10 @@ export default function ImportPage() {
         break;
       case "activations":
         csvContent =
-          "brandName,name,year,description,kitContents,venueRequirements,media,activationType,availableMonths,monthlyValue,scalingBehavior,fixedAmount,variableAmount,status,isActive\n" +
-          'Asahi,Winter Sports Bar Package,2026,Complete sports bar branding package for winter season,"20x Branded Bar Mats,10x Neon Signs,5x TV Screen Branding","Sports bar or pub,Minimum 3 TV screens",https://s3.amazonaws.com/activations/asahi-sports.jpg,fixed,"11,12",25000,,,,published,true\n' +
-          'Corona,Summer Beach Activation 2026,2026,Premium beach setup with branded umbrellas and furniture,"10x Branded Beach Umbrellas,5x Beach Lounge Chairs,2x Branded Coolers","Beachfront location,Minimum 50 seat capacity",https://s3.amazonaws.com/activations/corona-beach.jpg,variable,"1,2,3,4,5,6",,proportional,,10000,published,true\n' +
-          'Budweiser,World Cup Viewing Party,2026,Complete World Cup viewing party support package,"Large Screen TV,Branded Furniture,Sound System","Minimum 50 person capacity",https://s3.amazonaws.com/activations/budweiser-worldcup.jpg,variable,"5,6,7",,mixed,60000,13333,published,true';
+          "brandName,name,year,description,kitContents,venueRequirements,media,activationType,availableMonths,monthlyValue,scalingBehavior,fixedAmount,variableAmount,eligibleTiers,targetVenueCustomerCodes,kitLimit,submissionDeadline,status,isActive\n" +
+          'Asahi,Winter Sports Bar Package,2026,Complete sports bar branding package for winter season,"20x Branded Bar Mats,10x Neon Signs,5x TV Screen Branding","Sports bar or pub,Minimum 3 TV screens",https://s3.amazonaws.com/activations/asahi-sports.jpg,fixed,"11,12",25000,,,,\"gold,silver,bronze\",,,2026-11-15,published,true\n' +
+          'Corona,Summer Beach Activation 2026,2026,Premium beach setup with branded umbrellas and furniture,"10x Branded Beach Umbrellas,5x Beach Lounge Chairs,2x Branded Coolers","Beachfront location,Minimum 50 seat capacity",https://s3.amazonaws.com/activations/corona-beach.jpg,variable,"1,2,3,4,5,6",,proportional,,10000,\"gold,silver\",\"ZEN001234,ZEN001235\",20,2026-02-28,published,true\n' +
+          'Budweiser,World Cup Viewing Party,2026,Complete World Cup viewing party support package,"Large Screen TV,Branded Furniture,Sound System","Minimum 50 person capacity",https://s3.amazonaws.com/activations/budweiser-worldcup.jpg,variable,"5,6,7",,mixed,60000,13333,gold,,10,2026-03-10,published,true';
         break;
     }
 
@@ -309,9 +296,7 @@ export default function ImportPage() {
                       setFile(null);
                       setResult(null);
                       // Reset the file input
-                      const fileInput = document.getElementById(
-                        "file-upload"
-                      ) as HTMLInputElement;
+                      const fileInput = document.getElementById("file-upload") as HTMLInputElement;
                       if (fileInput) fileInput.value = "";
                     }}
                     title="Remove file"
@@ -346,18 +331,14 @@ export default function ImportPage() {
         <Card>
           <CardHeader>
             <CardTitle>Import Result</CardTitle>
-            <CardDescription>
-              View the results of your import operation
-            </CardDescription>
+            <CardDescription>View the results of your import operation</CardDescription>
           </CardHeader>
           <CardContent>
             {!result ? (
               <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
                 <Upload className="h-12 w-12 mb-4 opacity-50" />
                 <p>No import performed yet</p>
-                <p className="text-sm">
-                  Upload a file and click Import to begin
-                </p>
+                <p className="text-sm">Upload a file and click Import to begin</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -379,15 +360,11 @@ export default function ImportPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <p className="text-sm text-muted-foreground">Imported</p>
-                    <p className="text-2xl font-bold text-green-500">
-                      {result.imported}
-                    </p>
+                    <p className="text-2xl font-bold text-green-500">{result.imported}</p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-sm text-muted-foreground">Failed</p>
-                    <p className="text-2xl font-bold text-destructive">
-                      {result.failed}
-                    </p>
+                    <p className="text-2xl font-bold text-destructive">{result.failed}</p>
                   </div>
                 </div>
 
@@ -421,9 +398,7 @@ export default function ImportPage() {
                 <History className="h-5 w-5" />
                 Import History
               </CardTitle>
-              <CardDescription>
-                View your recent import operations
-              </CardDescription>
+              <CardDescription>View your recent import operations</CardDescription>
             </div>
           </div>
         </CardHeader>
@@ -454,23 +429,15 @@ export default function ImportPage() {
                       <TableCell className="font-medium capitalize">
                         {job.importType.replace("_", " ")}
                       </TableCell>
-                      <TableCell className="max-w-[200px] truncate">
-                        {job.filename}
-                      </TableCell>
+                      <TableCell className="max-w-[200px] truncate">{job.filename}</TableCell>
                       <TableCell>
-                        <Badge variant={getStatusBadgeVariant(job.status)}>
-                          {job.status}
-                        </Badge>
+                        <Badge variant={getStatusBadgeVariant(job.status)}>{job.status}</Badge>
                       </TableCell>
-                      <TableCell className="text-right">
-                        {job.totalRows}
-                      </TableCell>
+                      <TableCell className="text-right">{job.totalRows}</TableCell>
                       <TableCell className="text-right text-green-600">
                         {job.processedRows}
                       </TableCell>
-                      <TableCell className="text-right text-destructive">
-                        {job.errorRows}
-                      </TableCell>
+                      <TableCell className="text-right text-destructive">{job.errorRows}</TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {new Date(job.startedAt).toLocaleString("en-US", {
                           month: "short",
@@ -523,12 +490,10 @@ export default function ImportPage() {
             <ul className="list-disc list-inside  text-sm text-muted-foreground">
               <li>Invalid rows will be skipped and reported in errors</li>
               <li>
-                Duplicate entries will be updated automatically (venues by
-                customerCode, SKUs by productCode, activations by name)
+                Duplicate entries will be updated automatically (venues by customerCode, SKUs by
+                productCode, activations by name)
               </li>
-              <li>
-                Brand names must exist in the system (case-insensitive match)
-              </li>
+              <li>Brand names must exist in the system (case-insensitive match)</li>
               <li>User emails must exist for venue assignment</li>
               <li>Tier must be: gold, silver, or bronze</li>
               <li>Activation type must be: fixed or variable</li>
@@ -539,21 +504,17 @@ export default function ImportPage() {
             <h3 className="font-semibold mb-2">Array Fields</h3>
             <ul className="list-disc list-inside text-sm text-muted-foreground">
               <li>
-                <strong>All array fields use comma-separated format:</strong>{" "}
-                brands, kitContents, venueRequirements, availableMonths
+                <strong>All array fields use comma-separated format:</strong> brands, kitContents,
+                venueRequirements, availableMonths
               </li>
               <li>
                 <strong>Important:</strong> Comma separated
               </li>
               <li>Example brands: "Corona,Bull,Budwiser,Peroni"</li>
               <li>Example kitContents: "10x Umbrellas,5x Chairs,2x Coolers"</li>
+              <li>Example venueRequirements: "Beachfront location,Minimum 50 seat capacity"</li>
               <li>
-                Example venueRequirements: "Beachfront location,Minimum 50 seat
-                capacity"
-              </li>
-              <li>
-                Example availableMonths: "1,2,3,4,5,6" (January through June -
-                use numbers 1-12)
+                Example availableMonths: "1,2,3,4,5,6" (January through June - use numbers 1-12)
               </li>
             </ul>
           </div>
@@ -562,19 +523,17 @@ export default function ImportPage() {
             <h3 className="font-semibold mb-2">Activation Types</h3>
             <ul className="list-disc list-inside text-sm text-muted-foreground">
               <li>
-                <strong>Fixed:</strong> Provide monthlyValue. System calculates:
-                total = monthlyValue × months. Leave scalingBehavior,
-                fixedAmount, variableAmount empty.
+                <strong>Fixed:</strong> Provide monthlyValue. System calculates: total =
+                monthlyValue × months. Leave scalingBehavior, fixedAmount, variableAmount empty.
               </li>
               <li>
-                <strong>Variable + Proportional:</strong> Provide variableAmount
-                (monthly value). System calculates: total = variableAmount ×
-                months. Leave monthlyValue and fixedAmount empty.
+                <strong>Variable + Proportional:</strong> Provide variableAmount (monthly value).
+                System calculates: total = variableAmount × months. Leave monthlyValue and
+                fixedAmount empty.
               </li>
               <li>
-                <strong>Variable + Mixed:</strong> Provide fixedAmount
-                (one-time) and variableAmount (monthly). System calculates:
-                total = fixedAmount + (variableAmount × months). Leave
+                <strong>Variable + Mixed:</strong> Provide fixedAmount (one-time) and variableAmount
+                (monthly). System calculates: total = fixedAmount + (variableAmount × months). Leave
                 monthlyValue empty.
               </li>
             </ul>

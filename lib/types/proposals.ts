@@ -41,8 +41,30 @@ export interface Activation {
   scalingBehavior?: 'proportional' | 'mixed';
   fixedAmount?: string;
   variableAmount?: string;
+  eligibleTiers: Array<'gold' | 'silver' | 'bronze'>;
+  targetVenueIds?: string[];
+  kitLimit?: number | null;
+  submissionDeadline?: string | null;
+  visibilityMode?: 'tier_filtered' | 'venue_specific';
+  kitsUsed?: number;
+  kitsRemaining?: number | null;
+  soldOut?: boolean;
+  deadlinePassed?: boolean;
+  selectable?: boolean;
+  blockedReasons?: Array<'tier_not_eligible' | 'venue_not_targeted' | 'deadline_passed' | 'sold_out'>;
   status: 'draft' | 'published';
   active: boolean;
+}
+
+export interface ActivationOption extends Activation {
+  visibilityMode: 'tier_filtered' | 'venue_specific';
+  targetVenueIds: string[];
+  kitsUsed: number;
+  kitsRemaining: number | null;
+  soldOut: boolean;
+  deadlinePassed: boolean;
+  selectable: boolean;
+  blockedReasons: Array<'tier_not_eligible' | 'venue_not_targeted' | 'deadline_passed' | 'sold_out'>;
 }
 
 export interface ProposalActivation {
