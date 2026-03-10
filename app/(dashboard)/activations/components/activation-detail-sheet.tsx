@@ -43,6 +43,15 @@ interface Activation {
   scalingBehavior?: "proportional" | "mixed";
   fixedAmount?: string;
   variableAmount?: string;
+  eligibleTiers: Array<"gold" | "silver" | "bronze">;
+  targetVenueIds?: string[];
+  visibilityMode?: "tier_filtered" | "venue_specific";
+  kitLimit?: number | null;
+  kitsUsed?: number;
+  kitsRemaining?: number | null;
+  soldOut?: boolean;
+  submissionDeadline?: string | null;
+  deadlinePassed?: boolean;
   status: "draft" | "published";
   active: boolean;
   createdAt: string;
@@ -240,6 +249,37 @@ export function ActivationDetailSheet({
                 </span>
               </div>
             </div>
+          </div>
+
+          <div className="ml-8 text-xs space-y-2">
+            <p>
+              <span className="font-semibold">Visibility:</span>{" "}
+              {activation.visibilityMode === "venue_specific" ? "Venue Specific" : "Tier Filtered"}
+            </p>
+            {activation.visibilityMode !== "venue_specific" && (
+              <p>
+                <span className="font-semibold">Eligible Tiers:</span>{" "}
+                {activation.eligibleTiers.map((tier) => tier.toUpperCase()).join(", ")}
+              </p>
+            )}
+            <p>
+              <span className="font-semibold">Kit Status:</span>{" "}
+              {activation.kitLimit === null || activation.kitLimit === undefined
+                ? "Unlimited"
+                : activation.soldOut
+                ? "Sold Out"
+                : `${activation.kitsRemaining ?? 0} remaining`}
+            </p>
+            <p>
+              <span className="font-semibold">Submission Deadline:</span>{" "}
+              {activation.submissionDeadline
+                ? activation.deadlinePassed
+                  ? `Passed (${new Date(
+                      `${activation.submissionDeadline}T00:00:00`
+                    ).toLocaleDateString("en-US")})`
+                  : new Date(`${activation.submissionDeadline}T00:00:00`).toLocaleDateString("en-US")
+                : "None"}
+            </p>
           </div>
 
           {/* Activation Value Card */}

@@ -70,6 +70,17 @@ interface Activation {
   scalingBehavior?: "proportional" | "mixed";
   fixedAmount?: string;
   variableAmount?: string;
+  eligibleTiers: Array<"gold" | "silver" | "bronze">;
+  targetVenueIds?: string[];
+  visibilityMode?: "tier_filtered" | "venue_specific";
+  kitLimit?: number | null;
+  kitsUsed?: number;
+  kitsRemaining?: number | null;
+  soldOut?: boolean;
+  submissionDeadline?: string | null;
+  deadlinePassed?: boolean;
+  selectable?: boolean;
+  blockedReasons?: string[];
   status: "draft" | "published";
   active: boolean;
   createdAt: string;
@@ -215,6 +226,23 @@ export default function ActivationsPage() {
   const getBrandName = (brandId: string) => {
     const brand = getBrand(brandId);
     return brand?.name || "Unknown";
+  };
+
+  const getVisibilityLabel = (activation: Activation) => {
+    return activation.visibilityMode === "venue_specific" ? "Venue Specific" : "Tier Filtered";
+  };
+
+  const getKitLabel = (activation: Activation) => {
+    if (activation.kitLimit === null || activation.kitLimit === undefined) {
+      return "Unlimited";
+    }
+
+    if (activation.soldOut) {
+      return "Sold Out";
+    }
+
+    const remaining = activation.kitsRemaining ?? Math.max(activation.kitLimit, 0);
+    return `${remaining} remaining`;
   };
 
   // Helper function to convert hex color to RGB with opacity
@@ -382,6 +410,9 @@ export default function ActivationsPage() {
               <TableHead className="p-4">ACTIVATION</TableHead>
               <TableHead className="p-4">BRAND</TableHead>
               <TableHead className="p-4">TYPE</TableHead>
+              <TableHead className="p-4">VISIBILITY</TableHead>
+              <TableHead className="p-4">KIT STATUS</TableHead>
+              <TableHead className="p-4">DEADLINE</TableHead>
               <TableHead className="p-4">VALUE</TableHead>
               <TableHead className="p-4">DATE</TableHead>
               <TableHead className="p-4">ACTION</TableHead>
@@ -402,6 +433,15 @@ export default function ActivationsPage() {
                     <Skeleton className="h-6 w-16" />
                   </TableCell>
                   <TableCell className="p-4">
+                    <Skeleton className="h-6 w-24" />
+                  </TableCell>
+                  <TableCell className="p-4">
+                    <Skeleton className="h-6 w-20" />
+                  </TableCell>
+                  <TableCell className="p-4">
+                    <Skeleton className="h-6 w-24" />
+                  </TableCell>
+                  <TableCell className="p-4">
                     <div className="space-y-1">
                       <Skeleton className="h-4 w-24" />
                       <Skeleton className="h-3 w-16" />
@@ -417,7 +457,7 @@ export default function ActivationsPage() {
               ))
             ) : activations.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                   No activations found
                 </TableCell>
               </TableRow>
@@ -479,6 +519,39 @@ export default function ActivationsPage() {
                         </p>
                       )}
                     </Badge>
+                  </TableCell>
+                  <TableCell className="p-4">
+                    <Badge variant="outline">{getVisibilityLabel(activation)}</Badge>
+                  </TableCell>
+                  <TableCell className="p-4">
+                    <Badge
+                      className={
+                        activation.soldOut
+                          ? "bg-red-100 text-red-700 hover:bg-red-100"
+                          : "bg-slate-100 text-slate-700 hover:bg-slate-100"
+                      }
+                    >
+                      {getKitLabel(activation)}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="p-4">
+                    {activation.submissionDeadline ? (
+                      <Badge
+                        className={
+                          activation.deadlinePassed
+                            ? "bg-red-100 text-red-700 hover:bg-red-100"
+                            : "bg-amber-100 text-amber-700 hover:bg-amber-100"
+                        }
+                      >
+                        {activation.deadlinePassed
+                          ? "Passed"
+                          : new Date(
+                              `${activation.submissionDeadline}T00:00:00`
+                            ).toLocaleDateString("en-US")}
+                      </Badge>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">None</span>
+                    )}
                   </TableCell>
                   <TableCell className="p-4">
                     <div>

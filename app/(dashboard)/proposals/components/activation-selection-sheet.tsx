@@ -17,7 +17,7 @@ import {
   Copy,
 } from "lucide-react";
 import Image from "next/image";
-import type { Activation, ProposalActivation } from "@/lib/types/proposals";
+import type { Activation, ActivationOption, ProposalActivation } from "@/lib/types/proposals";
 import { MONTH_NAMES } from "@/lib/types/proposals";
 
 interface Brand {
@@ -29,6 +29,7 @@ interface Brand {
 
 interface ActivationSelectionSheetProps {
   activation: Activation | null;
+  optionMeta?: ActivationOption | null;
   brand: Brand | null | undefined;
   existingSelection?: ProposalActivation | null;
   clickedMonth?: number | null;
@@ -43,6 +44,7 @@ interface ActivationSelectionSheetProps {
 
 export function ActivationSelectionSheet({
   activation,
+  optionMeta,
   brand,
   existingSelection,
   clickedMonth,
@@ -62,6 +64,7 @@ export function ActivationSelectionSheet({
 
   const isFixed = activation.activationType === "fixed";
   const isInProposal = !!existingSelection;
+  const isSelectable = optionMeta?.selectable ?? false;
 
   // Check if the clicked month is selected in the proposal
   const isSelectedForThisMonth = clickedMonth
@@ -88,6 +91,9 @@ export function ActivationSelectionSheet({
   };
 
   const handleAdd = () => {
+    if (!isSelectable) {
+      return;
+    }
     const selectedMonths = getAutoSelectedMonths();
     onAdd({ selectedMonths });
     onOpenChange(false);
@@ -199,6 +205,27 @@ export function ActivationSelectionSheet({
             <p className="text-sm text-muted-foreground line-clamp-3 text-ellipsis">
               {activation.description}
             </p>
+            {(optionMeta?.soldOut || optionMeta?.deadlinePassed) && (
+              <div className="flex gap-2 mt-2">
+                {optionMeta.soldOut && <Badge className="bg-red-100 text-red-700">Sold Out</Badge>}
+                {optionMeta.deadlinePassed && (
+                  <Badge className="bg-amber-100 text-amber-700">Deadline Passed</Badge>
+                )}
+              </div>
+            )}
+            {(optionMeta?.kitsRemaining !== null && optionMeta?.kitsRemaining !== undefined) && (
+              <p className="text-xs text-muted-foreground mt-2">
+                Kits Remaining: {optionMeta.kitsRemaining}
+              </p>
+            )}
+            {activation.submissionDeadline && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Submission Deadline:{" "}
+                {new Date(`${activation.submissionDeadline}T00:00:00`).toLocaleDateString(
+                  "en-US"
+                )}
+              </p>
+            )}
           </div>
 
           {/* Kit Contents */}
@@ -388,11 +415,13 @@ export function ActivationSelectionSheet({
               <Button
                 variant="default"
                 onClick={handleAdd}
-                disabled={!isEditable}
+                disabled={!isEditable || !isSelectable}
                 className="flex-1"
               >
                 <Plus className="h-4 w-4" />
-                {isFixed
+                {!isSelectable
+                  ? "Not Selectable"
+                  : isFixed
                   ? "Add All Months"
                   : clickedMonthName
                   ? `Add to ${clickedMonthName}`

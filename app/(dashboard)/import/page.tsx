@@ -158,10 +158,10 @@ export default function ImportPage() {
         break;
       case "activations":
         csvContent =
-          "brandName,name,year,description,kitContents,venueRequirements,media,activationType,availableMonths,monthlyValue,scalingBehavior,fixedAmount,variableAmount,status,isActive\n" +
-          'Asahi,Winter Sports Bar Package,2026,Complete sports bar branding package for winter season,"20x Branded Bar Mats,10x Neon Signs,5x TV Screen Branding","Sports bar or pub,Minimum 3 TV screens",https://s3.amazonaws.com/activations/asahi-sports.jpg,fixed,"11,12",25000,,,,published,true\n' +
-          'Corona,Summer Beach Activation 2026,2026,Premium beach setup with branded umbrellas and furniture,"10x Branded Beach Umbrellas,5x Beach Lounge Chairs,2x Branded Coolers","Beachfront location,Minimum 50 seat capacity",https://s3.amazonaws.com/activations/corona-beach.jpg,variable,"1,2,3,4,5,6",,proportional,,10000,published,true\n' +
-          'Budweiser,World Cup Viewing Party,2026,Complete World Cup viewing party support package,"Large Screen TV,Branded Furniture,Sound System","Minimum 50 person capacity",https://s3.amazonaws.com/activations/budweiser-worldcup.jpg,variable,"5,6,7",,mixed,60000,13333,published,true';
+          "brandName,name,year,description,kitContents,venueRequirements,media,activationType,availableMonths,monthlyValue,scalingBehavior,fixedAmount,variableAmount,eligibleTiers,targetVenueCustomerCodes,kitLimit,submissionDeadline,status,isActive\n" +
+          'Asahi,Winter Sports Bar Package,2026,Complete sports bar branding package for winter season,"20x Branded Bar Mats,10x Neon Signs,5x TV Screen Branding","Sports bar or pub,Minimum 3 TV screens",https://s3.amazonaws.com/activations/asahi-sports.jpg,fixed,"11,12",25000,,,,\"gold,silver,bronze\",,,2026-11-15,published,true\n' +
+          'Corona,Summer Beach Activation 2026,2026,Premium beach setup with branded umbrellas and furniture,"10x Branded Beach Umbrellas,5x Beach Lounge Chairs,2x Branded Coolers","Beachfront location,Minimum 50 seat capacity",https://s3.amazonaws.com/activations/corona-beach.jpg,variable,"1,2,3,4,5,6",,proportional,,10000,\"gold,silver\",\"ZEN001234,ZEN001235\",20,2026-02-28,published,true\n' +
+          'Budweiser,World Cup Viewing Party,2026,Complete World Cup viewing party support package,"Large Screen TV,Branded Furniture,Sound System","Minimum 50 person capacity",https://s3.amazonaws.com/activations/budweiser-worldcup.jpg,variable,"5,6,7",,mixed,60000,13333,gold,,10,2026-03-10,published,true';
         break;
     }
 
