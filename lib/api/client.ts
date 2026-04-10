@@ -13,14 +13,24 @@ export const queryClient = new QueryClient({
   },
 });
 
-export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+
+export class ApiError extends Error {
+  status: number;
+  details: any;
+  data: any;
+
+  constructor(message: string, status: number, details?: any, data?: any) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.details = details;
+    this.data = data;
+  }
+}
 
 // API client helper with proper error handling
-export async function apiClient<T>(
-  endpoint: string,
-  options?: RequestInit
-): Promise<T> {
+export async function apiClient<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
 
   try {
@@ -38,7 +48,12 @@ export async function apiClient<T>(
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `API Error: ${response.statusText}`);
+      throw new ApiError(
+        errorData.message || errorData.error || `API Error: ${response.statusText}`,
+        response.status,
+        errorData.details,
+        errorData
+      );
     }
 
     return response.json();
@@ -59,12 +74,7 @@ export const api = {
     apiClient<T>(endpoint, {
       ...options,
       method: "POST",
-      body:
-        data instanceof FormData
-          ? data
-          : data
-            ? JSON.stringify(data)
-            : undefined,
+      body: data instanceof FormData ? data : data ? JSON.stringify(data) : undefined,
     }),
 
   put: <T>(endpoint: string, data?: unknown, options?: RequestInit) =>

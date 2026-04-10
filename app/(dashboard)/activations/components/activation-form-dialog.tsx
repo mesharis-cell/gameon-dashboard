@@ -31,7 +31,7 @@ import {
   ArrowLeft,
   XCircle,
 } from "lucide-react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 import { toast } from "sonner";
 
@@ -50,11 +50,29 @@ interface Activation {
   scalingBehavior?: "proportional" | "mixed";
   fixedAmount?: string;
   variableAmount?: string;
+  eligibleTiers: Array<"gold" | "silver" | "bronze">;
+  targetVenueIds?: string[];
+  kitLimit?: number | null;
+  submissionDeadline?: string | null;
+  visibilityMode?: "tier_filtered" | "venue_specific";
+  kitsUsed?: number;
+  kitsRemaining?: number | null;
+  soldOut?: boolean;
+  deadlinePassed?: boolean;
+  selectable?: boolean;
+  blockedReasons?: string[];
 }
 
 interface Brand {
   id: string;
   name: string;
+}
+
+interface VenueOption {
+  id: string;
+  customerCode: string;
+  name: string;
+  tier: "gold" | "silver" | "bronze";
 }
 
 interface ActivationFormDialogProps {
@@ -90,6 +108,14 @@ export function ActivationFormDialog({
 }: ActivationFormDialogProps) {
   const queryClient = useQueryClient();
   const isEditing = !!activation?.id;
+  const [venueSearch, setVenueSearch] = useState("");
+
+  const { data: venueOptionsResponse } = useQuery<{ success: boolean; data: VenueOption[] }>({
+    queryKey: ["activation-venue-options"],
+    queryFn: () => api.get("/api/activations/venues/options"),
+    enabled: open,
+  });
+  const venueOptions = venueOptionsResponse?.data || [];
 
   // Wizard step state: 1 = type selection, 2 = form details
   const [wizardStep, setWizardStep] = useState<1 | 2>(isEditing ? 2 : 1);
@@ -110,6 +136,16 @@ export function ActivationFormDialog({
     fixedAmount: activation?.fixedAmount || "",
     variableAmount: activation?.variableAmount || "",
     availableMonths: activation?.availableMonths || ([] as number[]),
+    eligibleTiers:
+      activation?.eligibleTiers && activation.eligibleTiers.length > 0
+        ? activation.eligibleTiers
+        : (["gold", "silver", "bronze"] as Array<"gold" | "silver" | "bronze">),
+    targetVenueIds: activation?.targetVenueIds || ([] as string[]),
+    kitLimit:
+      activation?.kitLimit !== null && activation?.kitLimit !== undefined
+        ? activation.kitLimit.toString()
+        : "",
+    submissionDeadline: activation?.submissionDeadline || "",
   });
 
   // Separate state for array fields
@@ -162,6 +198,16 @@ export function ActivationFormDialog({
         fixedAmount: activation.fixedAmount || "",
         variableAmount: activation.variableAmount || "",
         availableMonths: activation.availableMonths || [],
+        eligibleTiers:
+          activation.eligibleTiers && activation.eligibleTiers.length > 0
+            ? activation.eligibleTiers
+            : (["gold", "silver", "bronze"] as Array<"gold" | "silver" | "bronze">),
+        targetVenueIds: activation.targetVenueIds || [],
+        kitLimit:
+          activation.kitLimit !== null && activation.kitLimit !== undefined
+            ? activation.kitLimit.toString()
+            : "",
+        submissionDeadline: activation.submissionDeadline || "",
       });
       setKitContents(activation.kitContents || []);
       setVenueRequirements(activation.venueRequirements || []);
@@ -216,6 +262,10 @@ export function ActivationFormDialog({
       fixedAmount: "",
       variableAmount: "",
       availableMonths: [],
+      eligibleTiers: ["gold", "silver", "bronze"],
+      targetVenueIds: [],
+      kitLimit: "",
+      submissionDeadline: "",
     });
     setSelectedMonths([]);
     setKitContents([]);
@@ -224,6 +274,7 @@ export function ActivationFormDialog({
     setVenueRequirementInput("");
     setMediaFile(null);
     setMediaPreview("");
+    setVenueSearch("");
     setValidationErrors({});
   };
 
@@ -267,6 +318,9 @@ export function ActivationFormDialog({
     // Validate required fields
     if (!formData.brandId) errors.brandId = "Brand is required";
     if (!formData.name) errors.name = "Activation name is required";
+    if (formData.eligibleTiers.length === 0) {
+      errors.eligibleTiers = "Select at least one eligible tier";
+    }
 
     // Validate value fields based on activation type
     if (formData.activationType === "fixed") {
@@ -289,6 +343,13 @@ export function ActivationFormDialog({
     // Validate months selection
     if (selectedMonths.length === 0) {
       errors.months = `Please select at least one month for ${formData.activationType} activation`;
+    }
+
+    if (formData.kitLimit) {
+      const parsedLimit = parseInt(formData.kitLimit, 10);
+      if (Number.isNaN(parsedLimit) || parsedLimit <= 0) {
+        errors.kitLimit = "Kit limit must be a positive integer";
+      }
     }
 
     // Validate variable activation specific fields
@@ -363,6 +424,10 @@ export function ActivationFormDialog({
       media: mediaUrl || "",
       activationType: formData.activationType,
       availableMonths: selectedMonths,
+      eligibleTiers: formData.eligibleTiers,
+      targetVenueIds: formData.targetVenueIds,
+      kitLimit: formData.kitLimit ? parseInt(formData.kitLimit, 10) : null,
+      submissionDeadline: formData.submissionDeadline || null,
       status: isDraft ? "draft" : "published",
       active: !isDraft, // Set active to true when publishing
     };
@@ -423,6 +488,35 @@ export function ActivationFormDialog({
   };
 
   const isAllMonthsSelected = selectedMonths.length === 12;
+
+  const toggleEligibleTier = (tier: "gold" | "silver" | "bronze") => {
+    setFormData((prev) => {
+      const next = prev.eligibleTiers.includes(tier)
+        ? prev.eligibleTiers.filter((value) => value !== tier)
+        : [...prev.eligibleTiers, tier];
+      return { ...prev, eligibleTiers: next };
+    });
+
+    setValidationErrors((prev) => ({
+      ...prev,
+      eligibleTiers: "",
+    }));
+  };
+
+  const toggleTargetVenue = (venueId: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      targetVenueIds: prev.targetVenueIds.includes(venueId)
+        ? prev.targetVenueIds.filter((id) => id !== venueId)
+        : [...prev.targetVenueIds, venueId],
+    }));
+  };
+
+  const filteredVenueOptions = venueOptions.filter((venue) => {
+    if (!venueSearch.trim()) return true;
+    const haystack = `${venue.customerCode} ${venue.name}`.toLowerCase();
+    return haystack.includes(venueSearch.toLowerCase());
+  });
 
   return (
     <Dialog
@@ -606,6 +700,103 @@ export function ActivationFormDialog({
                         ))}
                       </SelectContent>
                     </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>
+                      Eligible Venue Tiers <span className="text-red-500">*</span>
+                    </Label>
+                    <div
+                      className={`border rounded-2xl p-4 space-y-2 ${validationErrors.eligibleTiers ? "border-red-500" : ""}`}
+                    >
+                      {(["gold", "silver", "bronze"] as const).map((tier) => (
+                        <div key={tier} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`tier-${tier}`}
+                            checked={formData.eligibleTiers.includes(tier)}
+                            onCheckedChange={() => toggleEligibleTier(tier)}
+                          />
+                          <Label htmlFor={`tier-${tier}`} className="text-sm capitalize cursor-pointer">
+                            {tier}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                    {validationErrors.eligibleTiers && (
+                      <p className="text-xs text-red-500">{validationErrors.eligibleTiers}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="venue-search">Venue-Specific Targeting (Optional)</Label>
+                    <p className="text-xs text-muted-foreground">
+                      If venues are selected here, tier filtering is overridden.
+                    </p>
+                    <Input
+                      id="venue-search"
+                      value={venueSearch}
+                      onChange={(e) => setVenueSearch(e.target.value)}
+                      placeholder="Search by customer code or venue name"
+                      className="rounded-2xl"
+                    />
+                    <div className="border rounded-2xl p-3 max-h-40 overflow-y-auto space-y-2">
+                      {filteredVenueOptions.length === 0 ? (
+                        <p className="text-xs text-muted-foreground">No matching venues</p>
+                      ) : (
+                        filteredVenueOptions.map((venue) => (
+                          <label key={venue.id} className="flex items-center gap-2 cursor-pointer">
+                            <Checkbox
+                              checked={formData.targetVenueIds.includes(venue.id)}
+                              onCheckedChange={() => toggleTargetVenue(venue.id)}
+                            />
+                            <span className="text-xs">
+                              {venue.customerCode} - {venue.name} ({venue.tier})
+                            </span>
+                          </label>
+                        ))
+                      )}
+                    </div>
+                    {formData.targetVenueIds.length > 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        {formData.targetVenueIds.length} venue
+                        {formData.targetVenueIds.length === 1 ? "" : "s"} selected
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="kitLimit">Kit Limit (Optional)</Label>
+                    <Input
+                      id="kitLimit"
+                      type="number"
+                      min={1}
+                      step={1}
+                      value={formData.kitLimit}
+                      onChange={(e) => {
+                        setFormData((prev) => ({ ...prev, kitLimit: e.target.value }));
+                        setValidationErrors((prev) => ({ ...prev, kitLimit: "" }));
+                      }}
+                      placeholder="e.g. 20"
+                      className={`rounded-2xl ${validationErrors.kitLimit ? "border-red-500" : ""}`}
+                    />
+                    {validationErrors.kitLimit && (
+                      <p className="text-xs text-red-500">{validationErrors.kitLimit}</p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="submissionDeadline">Submission Deadline (Optional)</Label>
+                    <Input
+                      id="submissionDeadline"
+                      type="date"
+                      value={formData.submissionDeadline}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, submissionDeadline: e.target.value }))
+                      }
+                      className="rounded-2xl"
+                    />
                   </div>
                 </div>
                 <div className="grid grid-cols-[1fr_1fr] gap-4">

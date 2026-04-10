@@ -54,10 +54,7 @@ import {
   Trophy,
 } from "lucide-react";
 import { toast } from "sonner";
-import type {
-  ProposalListItem,
-  ProposalsResponse,
-} from "@/lib/types/proposals";
+import type { ProposalListItem, ProposalsResponse } from "@/lib/types/proposals";
 import { STATUS_LABELS } from "@/lib/types/proposals";
 import { ProposalSummarySheet } from "./components/proposal-summary-sheet";
 
@@ -70,9 +67,7 @@ export default function ProposalsPage() {
   const { hasPermission } = usePermissions();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [proposalToDelete, setProposalToDelete] = useState<string | null>(null);
-  const [selectedProposalId, setSelectedProposalId] = useState<string | null>(
-    null
-  );
+  const [selectedProposalId, setSelectedProposalId] = useState<string | null>(null);
   const [isDetailSheetOpen, setIsDetailSheetOpen] = useState(false);
 
   // Filters and pagination
@@ -88,14 +83,7 @@ export default function ProposalsPage() {
   }, [searchQuery, statusFilter, dateFilter, tierFilter]);
 
   const { data: proposalsResponse, isLoading } = useQuery<ProposalsResponse>({
-    queryKey: [
-      "proposals",
-      page,
-      searchQuery,
-      statusFilter,
-      dateFilter,
-      tierFilter,
-    ],
+    queryKey: ["proposals", page, searchQuery, statusFilter, dateFilter, tierFilter],
     queryFn: () => {
       const params = new URLSearchParams({
         page: page.toString(),
@@ -110,12 +98,11 @@ export default function ProposalsPage() {
   });
 
   // Fetch full proposal details when a proposal is selected
-  const { data: selectedProposalResponse, isLoading: isProposalLoading } =
-    useQuery({
-      queryKey: ["proposal", selectedProposalId],
-      queryFn: () => api.get(`/api/proposals/${selectedProposalId}`),
-      enabled: !!selectedProposalId,
-    });
+  const { data: selectedProposalResponse, isLoading: isProposalLoading } = useQuery({
+    queryKey: ["proposal", selectedProposalId],
+    queryFn: () => api.get(`/api/proposals/${selectedProposalId}`),
+    enabled: !!selectedProposalId,
+  });
 
   const selectedProposal = (selectedProposalResponse as any)?.data;
 
@@ -254,9 +241,7 @@ export default function ProposalsPage() {
   const formatRelativeTime = (date: string) => {
     const now = new Date();
     const updatedDate = new Date(date);
-    const diffInSeconds = Math.floor(
-      (now.getTime() - updatedDate.getTime()) / 1000
-    );
+    const diffInSeconds = Math.floor((now.getTime() - updatedDate.getTime()) / 1000);
 
     if (diffInSeconds < 60) {
       return "just now";
@@ -297,16 +282,10 @@ export default function ProposalsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Proposals</h1>
-          <p className="text-muted-foreground">
-            Manage and track your venue proposals
-          </p>
+          <p className="text-muted-foreground">Manage and track your venue proposals</p>
         </div>
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={handleExport}
-            disabled={exportMutation.isPending}
-          >
+          <Button variant="outline" onClick={handleExport} disabled={exportMutation.isPending}>
             {exportMutation.isPending ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
@@ -315,10 +294,7 @@ export default function ProposalsPage() {
             Export
           </Button>
           <Can permission={["proposal:manage:own", "proposal:admin:all"]}>
-            <Button
-              onClick={handleCreateProposal}
-              disabled={createMutation.isPending}
-            >
+            <Button onClick={handleCreateProposal} disabled={createMutation.isPending}>
               {createMutation.isPending ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
@@ -428,10 +404,7 @@ export default function ProposalsPage() {
               ))
             ) : proposals.length === 0 ? (
               <TableRow>
-                <TableCell
-                  colSpan={7}
-                  className="text-center py-8 text-muted-foreground"
-                >
+                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                   No proposals found
                 </TableCell>
               </TableRow>
@@ -440,8 +413,7 @@ export default function ProposalsPage() {
                 // Check if user can manage this specific proposal
                 const canManageThisProposal =
                   hasPermission("proposal:admin:all") ||
-                  (hasPermission("proposal:manage:own") &&
-                    proposal.creator?.id === user?.id);
+                  (hasPermission("proposal:manage:own") && proposal.creator?.id === user?.id);
 
                 return (
                   <TableRow
@@ -466,9 +438,7 @@ export default function ProposalsPage() {
                       </div>
                     </TableCell>
                     <TableCell className="p-4">
-                      <div className="text-sm">
-                        {proposal.venue?.name || "No venue"}
-                      </div>
+                      <div className="text-sm">{proposal.venue?.name || "No venue"}</div>
                     </TableCell>
                     <TableCell className="p-4">
                       {proposal.venue?.tier ? (
@@ -492,9 +462,7 @@ export default function ProposalsPage() {
                           >
                             <Trophy className="stroke-1" />
                           </div>
-                          <p className="capi capitalize">
-                            {proposal.venue.tier}
-                          </p>
+                          <p className="capi capitalize">{proposal.venue.tier}</p>
                         </div>
                       ) : (
                         <span className="text-sm text-muted-foreground">-</span>
@@ -527,9 +495,7 @@ export default function ProposalsPage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="p-4">
-                      <div className="font-medium">
-                        {formatCurrency(proposal.totalValue)}
-                      </div>
+                      <div className="font-medium">{formatCurrency(proposal.totalValue)}</div>
                     </TableCell>
                     <TableCell className="p-4">
                       <div className="flex flex-col">
@@ -537,28 +503,18 @@ export default function ProposalsPage() {
                           {formatRelativeTime(proposal.updatedAt)}
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          {new Date(proposal.updatedAt).toLocaleDateString(
-                            "en-US",
-                            {
-                              month: "short",
-                              day: "numeric",
-                              year: "numeric",
-                            }
-                          )}
+                          {new Date(proposal.updatedAt).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })}
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
                       <DropdownMenu>
-                        <DropdownMenuTrigger
-                          asChild
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            disabled={!canManageThisProposal}
-                          >
+                        <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                          <Button variant="ghost" size="icon" disabled={!canManageThisProposal}>
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
@@ -603,8 +559,8 @@ export default function ProposalsPage() {
         <div className="flex items-center justify-between">
           <div className="text-sm text-muted-foreground">
             Showing {(pagination.page - 1) * pagination.limit + 1} to{" "}
-            {Math.min(pagination.page * pagination.limit, pagination.total)} of{" "}
-            {pagination.total} proposals
+            {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total}{" "}
+            proposals
           </div>
           <div className="flex gap-2">
             <Button
@@ -633,14 +589,11 @@ export default function ProposalsPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Proposal</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this proposal? This action cannot
-              be undone.
+              Are you sure you want to delete this proposal? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setProposalToDelete(null)}>
-              Cancel
-            </AlertDialogCancel>
+            <AlertDialogCancel onClick={() => setProposalToDelete(null)}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
